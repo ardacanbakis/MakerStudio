@@ -1,4 +1,3 @@
-import { useRef, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import {
   OrbitControls,
@@ -12,81 +11,84 @@ import {
 import { useStore } from '../store/useStore'
 import ShelfUnit from './scene/ShelfUnit'
 import DimensionLabels from './scene/DimensionLabels'
+import CameraController from './scene/CameraController'
 import ViewportToolbar from './ViewportToolbar'
 
 function Scene() {
-  const { showGrid, showDimensions, showShadows, renderMode } = useStore()
+  const { showGrid, showDimensions, showShadows } = useStore()
 
   return (
     <>
-      {/* Lighting rig */}
-      <ambientLight intensity={0.4} color="#fff8f0" />
+      {/* Camera animation controller */}
+      <CameraController />
+
+      {/* Lighting */}
+      <ambientLight intensity={0.45} color="#fff8f0" />
       <directionalLight
         position={[8, 12, 6]}
-        intensity={1.8}
+        intensity={2.0}
         color="#fff5e0"
         castShadow={showShadows}
         shadow-mapSize={[2048, 2048]}
-        shadow-camera-far={80}
-        shadow-camera-left={-30}
-        shadow-camera-right={30}
-        shadow-camera-top={30}
-        shadow-camera-bottom={-30}
+        shadow-camera-far={600}
+        shadow-camera-left={-200}
+        shadow-camera-right={200}
+        shadow-camera-top={300}
+        shadow-camera-bottom={-100}
         shadow-bias={-0.001}
       />
-      <directionalLight position={[-4, 6, -4]} intensity={0.4} color="#e0f0ff" />
-      <pointLight position={[0, 8, 4]} intensity={0.6} color="#fff8f0" distance={40} />
+      <directionalLight position={[-4, 6, -4]} intensity={0.5} color="#ddeeff" />
+      <pointLight position={[0, 8, 4]} intensity={0.8} color="#fff8f0" distance={600} />
 
-      {/* Environment for reflections */}
       <Environment preset="studio" background={false} />
 
-      {/* Main model */}
-      <ShelfUnit wireframe={renderMode === 'wireframe'} xray={renderMode === 'xray'} />
+      {/* Model */}
+      <ShelfUnit />
 
       {/* Dimension annotations */}
       {showDimensions && <DimensionLabels />}
 
-      {/* Ground */}
+      {/* Contact shadow on ground */}
       {showShadows && (
         <ContactShadows
-          position={[0, -0.01, 0]}
-          opacity={0.5}
-          scale={60}
-          blur={2.5}
-          far={20}
+          position={[0, -0.5, 0]}
+          opacity={0.45}
+          scale={200}
+          blur={3}
+          far={60}
           color="#000000"
         />
       )}
 
-      {/* Grid */}
+      {/* Infinite grid */}
       {showGrid && (
         <Grid
-          args={[100, 100]}
-          position={[0, -0.01, 0]}
-          cellSize={5}
-          cellThickness={0.5}
-          cellColor="#2a2a2a"
-          sectionSize={20}
-          sectionThickness={1}
-          sectionColor="#3a3a3a"
-          fadeDistance={80}
+          args={[1000, 1000]}
+          position={[0, -0.5, 0]}
+          cellSize={10}
+          cellThickness={0.4}
+          cellColor="#222222"
+          sectionSize={50}
+          sectionThickness={0.8}
+          sectionColor="#333333"
+          fadeDistance={400}
           fadeStrength={1}
           infiniteGrid
         />
       )}
 
-      {/* Controls */}
+      {/* Orbit controls — makeDefault exposes them via useThree().controls */}
       <OrbitControls
         makeDefault
-        minDistance={20}
-        maxDistance={300}
-        minPolarAngle={0.1}
-        maxPolarAngle={Math.PI / 2 - 0.05}
+        minDistance={40}
+        maxDistance={600}
+        minPolarAngle={0.05}
+        maxPolarAngle={Math.PI / 2 - 0.02}
         enableDamping
-        dampingFactor={0.08}
-        rotateSpeed={0.6}
+        dampingFactor={0.07}
+        rotateSpeed={0.55}
         panSpeed={0.8}
-        zoomSpeed={0.8}
+        zoomSpeed={0.75}
       />
     </>
   )
@@ -97,41 +99,35 @@ export default function Viewport() {
 
   return (
     <div className="flex-1 relative bg-studio-bg overflow-hidden">
-      {/* Toolbar overlay */}
       <ViewportToolbar />
 
       <Canvas
         shadows={showShadows}
-        camera={{
-          position: [120, 90, 120],
-          fov: 45,
-          near: 0.1,
-          far: 2000,
-        }}
+        camera={{ position: [120, 90, 120], fov: 45, near: 0.5, far: 3000 }}
         gl={{
           antialias: true,
           powerPreference: 'high-performance',
           alpha: false,
           stencil: false,
+          depth: true,
         }}
         dpr={[1, Math.min(window.devicePixelRatio, 2)]}
         performance={{ min: 0.5 }}
         className="w-full h-full"
       >
         <color attach="background" args={['#0f0f0f']} />
-        <fog attach="fog" args={['#0f0f0f', 200, 600]} />
+        <fog attach="fog" args={['#0f0f0f', 400, 1200]} />
+
         <Scene />
 
-        {/* 3D Gizmo */}
-        <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
+        <GizmoHelper alignment="bottom-right" margin={[64, 64]}>
           <GizmoViewport
             axisColors={['#ef4444', '#22c55e', '#3b82f6']}
             labelColor="#ffffff"
           />
         </GizmoHelper>
 
-        {/* Performance monitor (dev only) */}
-        {import.meta.env.DEV && <Stats className="!left-auto !right-0 !top-auto !bottom-0" />}
+        {import.meta.env.DEV && <Stats />}
       </Canvas>
     </div>
   )

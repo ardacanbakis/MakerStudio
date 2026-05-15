@@ -1,25 +1,25 @@
 import { useMemo } from 'react'
-import { BoxGeometry, MeshStandardMaterial, MeshBasicMaterial } from 'three'
+import { MeshStandardMaterial, MeshBasicMaterial } from 'three'
 import { useStore } from '../../store/useStore'
 
 const WOOD_COLORS = {
-  oak:        '#c8a96e',
-  pine:       '#e8c98a',
-  walnut:     '#6b4226',
-  maple:      '#f5deb3',
-  mahogany:   '#8b2e1e',
-  birch:      '#dfc27d',
-  cherry:     '#a0522d',
+  oak:      '#c8a96e',
+  pine:     '#e8c98a',
+  walnut:   '#6b4226',
+  maple:    '#f5deb3',
+  mahogany: '#8b2e1e',
+  birch:    '#dfc27d',
+  cherry:   '#a0522d',
 }
 
 const WOOD_ROUGHNESS = {
-  oak:      0.65,
-  pine:     0.8,
-  walnut:   0.55,
-  maple:    0.6,
-  mahogany: 0.5,
-  birch:    0.7,
-  cherry:   0.52,
+  oak: 0.65, pine: 0.82, walnut: 0.55, maple: 0.58,
+  mahogany: 0.50, birch: 0.70, cherry: 0.52,
+}
+
+const WOOD_METALNESS = {
+  oak: 0.04, pine: 0.02, walnut: 0.06, maple: 0.05,
+  mahogany: 0.08, birch: 0.03, cherry: 0.06,
 }
 
 function Board({ position, args, material }) {
@@ -30,108 +30,70 @@ function Board({ position, args, material }) {
   )
 }
 
-export default function ShelfUnit({ wireframe = false, xray = false }) {
-  const { dimensions, woodSpecies, woodThickness, shelfCount } = useStore()
-  const { width, height, depth } = dimensions
-
-  // Scale from cm → Three.js units (1 unit = 1 cm)
-  const W = width
-  const H = height
-  const D = depth
+export default function ShelfUnit() {
+  const { dimensions, woodSpecies, woodThickness, shelfCount, renderMode } = useStore()
+  const { width: W, height: H, depth: D } = dimensions
   const T = woodThickness
 
   const material = useMemo(() => {
-    const color = WOOD_COLORS[woodSpecies] ?? WOOD_COLORS.oak
+    const color    = WOOD_COLORS[woodSpecies]    ?? WOOD_COLORS.oak
     const roughness = WOOD_ROUGHNESS[woodSpecies] ?? 0.65
+    const metalness = WOOD_METALNESS[woodSpecies] ?? 0.04
 
-    if (wireframe) {
+    if (renderMode === 'wireframe') {
       return new MeshBasicMaterial({ color: '#f59e0b', wireframe: true })
     }
-    if (xray) {
+    if (renderMode === 'xray') {
       return new MeshStandardMaterial({
-        color,
-        transparent: true,
-        opacity: 0.3,
-        roughness,
-        metalness: 0.1,
+        color, roughness, metalness,
+        transparent: true, opacity: 0.22,
         depthWrite: false,
       })
     }
-    return new MeshStandardMaterial({
-      color,
-      roughness,
-      metalness: 0.05,
-    })
-  }, [woodSpecies, wireframe, xray])
+    return new MeshStandardMaterial({ color, roughness, metalness })
+  }, [woodSpecies, renderMode])
 
   const backMaterial = useMemo(() => {
+    if (renderMode === 'wireframe') return material
     const color = WOOD_COLORS[woodSpecies] ?? WOOD_COLORS.oak
-    if (wireframe) return material
     return new MeshStandardMaterial({
       color,
-      roughness: 0.85,
-      metalness: 0.02,
+      roughness: (WOOD_ROUGHNESS[woodSpecies] ?? 0.65) + 0.1,
+      metalness: 0.01,
+      ...(renderMode === 'xray' ? { transparent: true, opacity: 0.15, depthWrite: false } : {}),
     })
-  }, [woodSpecies, wireframe, material])
+  }, [woodSpecies, renderMode, material])
 
-  // Shelf Y positions — evenly distributed between bottom and top panels
-  const shelfYPositions = useMemo(() => {
+  // Shelf Y positions inside the carcass
+  const shelfYs = useMemo(() => {
     const innerH = H - 2 * T
-    return Array.from({ length: shelfCount }, (_, i) => {
-      const spacing = innerH / (shelfCount + 1)
-      return -H / 2 + T + spacing * (i + 1)
-    })
+    const spacing = innerH / (shelfCount + 1)
+    return Array.from({ length: shelfCount }, (_, i) => -H / 2 + T + spacing * (i + 1))
   }, [H, T, shelfCount])
 
-  // Center the unit vertically so its bottom sits at y=0
   const groupY = H / 2
 
   return (
     <group position={[0, groupY, 0]}>
-      {/* Left side panel */}
-      <Board
-        position={[-W / 2 + T / 2, 0, 0]}
-        args={[T, H, D]}
-        material={material}
-      />
+      {/* Left side */}
+      <Board position={[-(W / 2) + T / 2, 0, 0]} args={[T, H, D]} material={material} />
 
-      {/* Right side panel */}
-      <Board
-        position={[W / 2 - T / 2, 0, 0]}
-        args={[T, H, D]}
-        material={material}
-      />
+      {/* Right side */}
+      <Board position={[W / 2 - T / 2, 0, 0]} args={[T, H, D]} material={material} />
 
-      {/* Top panel */}
-      <Board
-        position={[0, H / 2 - T / 2, 0]}
-        args={[W - 2 * T, T, D]}
-        material={material}
-      />
+      {/* Top */}
+      <Board position={[0, H / 2 - T / 2, 0]} args={[W - 2 * T, T, D]} material={material} />
 
-      {/* Bottom panel */}
-      <Board
-        position={[0, -H / 2 + T / 2, 0]}
-        args={[W - 2 * T, T, D]}
-        material={material}
-      />
+      {/* Bottom */}
+      <Board position={[0, -(H / 2) + T / 2, 0]} args={[W - 2 * T, T, D]} material={material} />
 
-      {/* Fixed shelves */}
-      {shelfYPositions.map((y, i) => (
-        <Board
-          key={i}
-          position={[0, y, 0]}
-          args={[W - 2 * T, T, D - 1]}
-          material={material}
-        />
+      {/* Shelves */}
+      {shelfYs.map((y, i) => (
+        <Board key={i} position={[0, y, 0]} args={[W - 2 * T, T, D - 1.2]} material={material} />
       ))}
 
-      {/* Back panel (thinner) */}
-      <Board
-        position={[0, 0, -D / 2 + 0.3]}
-        args={[W, H, 0.6]}
-        material={backMaterial}
-      />
+      {/* Back panel (6 mm ply) */}
+      <Board position={[0, 0, -(D / 2) + 0.3]} args={[W, H, 0.6]} material={backMaterial} />
     </group>
   )
 }
