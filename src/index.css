@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    @apply h-full w-full m-0 p-0 overflow-hidden;
+    background-color: #0f0f0f;
+    color: #e5e7eb;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #1a1a1a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #3a3a3a;
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #4a4a4a;
+  }
+}
+
+@layer components {
+  .slider-amber {
+    @apply accent-amber-500;
+  }
+
+  .tab-btn {
+    @apply w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150;
+  }
+
+  .tab-btn-active {
+    @apply bg-amber-500/10 text-amber-400 border border-amber-500/20;
+  }
+
+  .tab-btn-inactive {
+    @apply text-gray-400 hover:text-gray-200 hover:bg-white/5 border border-transparent;
+  }
+
+  .panel-section {
+    @apply border-b border-studio-border pb-4 mb-4 last:border-0 last:mb-0 last:pb-0;
+  }
+
+  .label-xs {
+    @apply text-xs font-mono uppercase tracking-widest text-gray-500 select-none;
+  }
+
+  .value-badge {
+    @apply font-mono text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded;
+  }
+}
