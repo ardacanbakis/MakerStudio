@@ -1,28 +1,33 @@
 import { Canvas } from '@react-three/fiber'
 import {
-  OrbitControls,
-  Grid,
-  Environment,
-  ContactShadows,
-  GizmoHelper,
-  GizmoViewport,
-  Stats,
+  OrbitControls, Grid, Environment, ContactShadows,
+  GizmoHelper, GizmoViewport, Stats,
 } from '@react-three/drei'
 import { useStore } from '../store/useStore'
 import ShelfUnit from './scene/ShelfUnit'
+import DeskUnit from './scene/DeskUnit'
+import CabinetUnit from './scene/CabinetUnit'
 import DimensionLabels from './scene/DimensionLabels'
 import CameraController from './scene/CameraController'
+import ScreenshotTrigger from './scene/ScreenshotTrigger'
 import ViewportToolbar from './ViewportToolbar'
+
+function FurnitureModel() {
+  const furnitureType = useStore((s) => s.furnitureType)
+  if (furnitureType === 'desk')    return <DeskUnit />
+  if (furnitureType === 'cabinet') return <CabinetUnit />
+  return <ShelfUnit />
+}
 
 function Scene() {
   const { showGrid, showDimensions, showShadows } = useStore()
 
   return (
     <>
-      {/* Camera animation controller */}
       <CameraController />
+      <ScreenshotTrigger />
 
-      {/* Lighting */}
+      {/* Lighting rig */}
       <ambientLight intensity={0.45} color="#fff8f0" />
       <directionalLight
         position={[8, 12, 6]}
@@ -42,13 +47,10 @@ function Scene() {
 
       <Environment preset="studio" background={false} />
 
-      {/* Model */}
-      <ShelfUnit />
+      <FurnitureModel />
 
-      {/* Dimension annotations */}
       {showDimensions && <DimensionLabels />}
 
-      {/* Contact shadow on ground */}
       {showShadows && (
         <ContactShadows
           position={[0, -0.5, 0]}
@@ -56,39 +58,26 @@ function Scene() {
           scale={200}
           blur={3}
           far={60}
-          color="#000000"
         />
       )}
 
-      {/* Infinite grid */}
       {showGrid && (
         <Grid
           args={[1000, 1000]}
           position={[0, -0.5, 0]}
-          cellSize={10}
-          cellThickness={0.4}
-          cellColor="#222222"
-          sectionSize={50}
-          sectionThickness={0.8}
-          sectionColor="#333333"
-          fadeDistance={400}
-          fadeStrength={1}
+          cellSize={10} cellThickness={0.4} cellColor="#1e1e1e"
+          sectionSize={50} sectionThickness={0.7} sectionColor="#2d2d2d"
+          fadeDistance={400} fadeStrength={1}
           infiniteGrid
         />
       )}
 
-      {/* Orbit controls — makeDefault exposes them via useThree().controls */}
       <OrbitControls
         makeDefault
-        minDistance={40}
-        maxDistance={600}
-        minPolarAngle={0.05}
-        maxPolarAngle={Math.PI / 2 - 0.02}
-        enableDamping
-        dampingFactor={0.07}
-        rotateSpeed={0.55}
-        panSpeed={0.8}
-        zoomSpeed={0.75}
+        minDistance={40} maxDistance={600}
+        minPolarAngle={0.05} maxPolarAngle={Math.PI / 2 - 0.02}
+        enableDamping dampingFactor={0.07}
+        rotateSpeed={0.55} panSpeed={0.8} zoomSpeed={0.75}
       />
     </>
   )
@@ -107,9 +96,8 @@ export default function Viewport() {
         gl={{
           antialias: true,
           powerPreference: 'high-performance',
-          alpha: false,
-          stencil: false,
-          depth: true,
+          alpha: false, stencil: false, depth: true,
+          preserveDrawingBuffer: true,  // required for toBlob screenshot
         }}
         dpr={[1, Math.min(window.devicePixelRatio, 2)]}
         performance={{ min: 0.5 }}
