@@ -2,8 +2,11 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, master]
-  workflow_dispatch:          # lets you trigger manually from the Actions tab
+    branches:
+      - main
+      - master
+      - 'claude/setup-makerstudio-project-DWIQl'
+  workflow_dispatch:
 
 permissions:
   contents: read
