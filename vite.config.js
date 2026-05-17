@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: './',
+  // GitHub Actions sets GITHUB_ACTIONS=true; Vercel/Netlify deploy at root so '/' is correct there too
+  base: process.env.GITHUB_ACTIONS ? '/MakerStudio/' : '/',
   build: {
     target: 'esnext',
     rollupOptions: {
