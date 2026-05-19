@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useStore } from '../store/useStore'
+
 import { packCutList, computeYield } from '../utils/binPack'
 import { downloadCSV, buildCutListCSV, copyTextToClipboard, cutListToText } from '../utils/export'
 import { fmt } from '../utils/units'
@@ -17,6 +18,7 @@ function CutLayoutSVG({ boards, boardW, boardL, kerf }) {
   const scale = PANEL_WIDTH_PX / boardW
   const boardH_px = boardL * scale
   const [hovered, setHovered] = useState(null)
+  const setHoveredPart = useStore((s) => s.setHoveredPart)
 
   if (!boards.length) return null
 
@@ -55,8 +57,8 @@ function CutLayoutSVG({ boards, boardW, boardL, kerf }) {
                     fillOpacity={isHovered ? 0.95 : 0.75}
                     stroke={isHovered ? '#ffffff' : 'rgba(0,0,0,0.4)'}
                     strokeWidth={isHovered ? 1.5 : 0.5}
-                    onMouseEnter={() => setHovered(key)}
-                    onMouseLeave={() => setHovered(null)}
+                    onMouseEnter={() => { setHovered(key); setHoveredPart(p.label) }}
+                    onMouseLeave={() => { setHovered(null); setHoveredPart(null) }}
                     className="cursor-pointer transition-all"
                     rx={1}
                   />

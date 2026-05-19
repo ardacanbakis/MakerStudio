@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { MeshStandardMaterial, MeshBasicMaterial } from 'three'
 import { useStore } from '../../store/useStore'
 import { getWoodTexture } from '../../utils/woodTexture'
 
@@ -12,34 +11,45 @@ const WOOD_ROUGHNESS = {
   mahogany: 0.48, birch: 0.68, cherry: 0.50,
 }
 
-function Board({ position, args, material, rotation }) {
+function Board({ position, args, rotation, color, roughness, metalness = 0.05, map, renderMode, highlight, dim }) {
+  if (renderMode === 'wireframe') {
+    return (
+      <mesh position={position} rotation={rotation} receiveShadow castShadow>
+        <boxGeometry args={args} />
+        <meshBasicMaterial color="#f59e0b" wireframe />
+      </mesh>
+    )
+  }
+  const xray = renderMode === 'xray'
+  const transparent = xray || dim
+  const opacity = xray ? 0.22 : dim ? 0.15 : 1
   return (
-    <mesh position={position} rotation={rotation} receiveShadow castShadow material={material}>
+    <mesh position={position} rotation={rotation} receiveShadow castShadow>
       <boxGeometry args={args} />
+      <meshStandardMaterial
+        color={color} roughness={roughness} metalness={metalness} map={map}
+        transparent={transparent} opacity={opacity} depthWrite={!xray && !dim}
+        emissive={highlight ? '#f59e0b' : '#000000'}
+        emissiveIntensity={highlight ? 0.45 : 0}
+      />
     </mesh>
   )
 }
 
-function useMaterial(woodSpecies, renderMode, showTexture) {
-  return useMemo(() => {
-    const color    = WOOD_COLORS[woodSpecies] ?? WOOD_COLORS.oak
-    const roughness = WOOD_ROUGHNESS[woodSpecies] ?? 0.65
-    const map      = showTexture ? getWoodTexture(woodSpecies) : null
-    if (renderMode === 'wireframe') return new MeshBasicMaterial({ color: '#f59e0b', wireframe: true })
-    return new MeshStandardMaterial({
-      color, roughness, metalness: 0.05, map,
-      ...(renderMode === 'xray' ? { transparent: true, opacity: 0.22, depthWrite: false } : {}),
-    })
-  }, [woodSpecies, renderMode, showTexture])
-}
-
 export default function DeskUnit() {
-  const { dimensions, woodSpecies, woodThickness, renderMode, showTexture, explodeAmount } = useStore()
+  const { dimensions, woodSpecies, woodThickness, renderMode, showTexture, explodeAmount, hoveredPart } = useStore()
   const { width: W, height: H, depth: D } = dimensions
   const T = woodThickness
   const ex = explodeAmount
 
-  const mat = useMaterial(woodSpecies, renderMode, showTexture)
+  const color = WOOD_COLORS[woodSpecies] ?? WOOD_COLORS.oak
+  const roughness = WOOD_ROUGHNESS[woodSpecies] ?? 0.65
+  const map = useMemo(() => showTexture ? getWoodTexture(woodSpecies) : null, [woodSpecies, showTexture])
+
+  const matProps = { color, roughness, map, renderMode }
+
+  const hl = (label) => hoveredPart === label
+  const dm = (label) => hoveredPart !== null && hoveredPart !== label
 
   // Pedestal proportions
   const pedW  = Math.min(50, W * 0.22)
@@ -58,37 +68,41 @@ export default function DeskUnit() {
       <Board
         position={[0, H + topUp, 0]}
         args={[W, T * 1.5, D]}
-        material={mat}
+        {...matProps}
+        highlight={hl('Desktop top')}
+        dim={dm('Desktop top')}
       />
 
       {/* ─── Left pedestal ─── */}
       <group position={[-(W / 2 - pedW / 2) - sideOut * 0.4, 0, 0]}>
         {/* outer side */}
-        <Board position={[-(pedW/2 - legT/2), pedH/2, 0]} args={[legT, pedH, D]} material={mat} />
+        <Board position={[-(pedW/2 - legT/2), pedH/2, 0]} args={[legT, pedH, D]} {...matProps} highlight={hl('Pedestal side')} dim={dm('Pedestal side')} />
         {/* inner side */}
-        <Board position={[ (pedW/2 - legT/2), pedH/2, 0]} args={[legT, pedH, D]} material={mat} />
+        <Board position={[ (pedW/2 - legT/2), pedH/2, 0]} args={[legT, pedH, D]} {...matProps} highlight={hl('Pedestal side')} dim={dm('Pedestal side')} />
         {/* top of ped */}
-        <Board position={[0, pedH, 0]} args={[pedW - 2*legT, legT, D]} material={mat} />
+        <Board position={[0, pedH, 0]} args={[pedW - 2*legT, legT, D]} {...matProps} highlight={hl('Pedestal side')} dim={dm('Pedestal side')} />
         {/* bottom */}
-        <Board position={[0, legT/2, 0]} args={[pedW - 2*legT, legT, D]} material={mat} />
+        <Board position={[0, legT/2, 0]} args={[pedW - 2*legT, legT, D]} {...matProps} highlight={hl('Pedestal side')} dim={dm('Pedestal side')} />
         {/* mid shelf */}
-        <Board position={[0, pedH * 0.45 + pedShelf * 0.3, 0]} args={[pedW - 2*legT, legT, D - 2]} material={mat} />
+        <Board position={[0, pedH * 0.45 + pedShelf * 0.3, 0]} args={[pedW - 2*legT, legT, D - 2]} {...matProps} highlight={hl('Pedestal shelf')} dim={dm('Pedestal shelf')} />
       </group>
 
       {/* ─── Right pedestal ─── */}
       <group position={[(W / 2 - pedW / 2) + sideOut * 0.4, 0, 0]}>
-        <Board position={[-(pedW/2 - legT/2), pedH/2, 0]} args={[legT, pedH, D]} material={mat} />
-        <Board position={[ (pedW/2 - legT/2), pedH/2, 0]} args={[legT, pedH, D]} material={mat} />
-        <Board position={[0, pedH, 0]} args={[pedW - 2*legT, legT, D]} material={mat} />
-        <Board position={[0, legT/2, 0]} args={[pedW - 2*legT, legT, D]} material={mat} />
-        <Board position={[0, pedH * 0.65 + pedShelf * 0.5, 0]} args={[pedW - 2*legT, legT, D - 2]} material={mat} />
+        <Board position={[-(pedW/2 - legT/2), pedH/2, 0]} args={[legT, pedH, D]} {...matProps} highlight={hl('Pedestal side')} dim={dm('Pedestal side')} />
+        <Board position={[ (pedW/2 - legT/2), pedH/2, 0]} args={[legT, pedH, D]} {...matProps} highlight={hl('Pedestal side')} dim={dm('Pedestal side')} />
+        <Board position={[0, pedH, 0]} args={[pedW - 2*legT, legT, D]} {...matProps} highlight={hl('Pedestal side')} dim={dm('Pedestal side')} />
+        <Board position={[0, legT/2, 0]} args={[pedW - 2*legT, legT, D]} {...matProps} highlight={hl('Pedestal side')} dim={dm('Pedestal side')} />
+        <Board position={[0, pedH * 0.65 + pedShelf * 0.5, 0]} args={[pedW - 2*legT, legT, D - 2]} {...matProps} highlight={hl('Pedestal shelf')} dim={dm('Pedestal shelf')} />
       </group>
 
       {/* ─── Modesty / back panel ─── */}
       <Board
         position={[0, pedH * 0.35, -(D/2 - 0.4) - backOut]}
         args={[W - 2*pedW, pedH * 0.6, 0.6]}
-        material={mat}
+        {...matProps}
+        highlight={hl('Modesty panel')}
+        dim={dm('Modesty panel')}
       />
     </group>
   )

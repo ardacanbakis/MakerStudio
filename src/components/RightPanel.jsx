@@ -18,12 +18,12 @@ const TAB_LABELS = {
   printprep:  'Print Prep',
 }
 
-export default function RightPanel() {
+export default function RightPanel({ style }) {
   const activeTab = useStore((s) => s.activeTab)
   const ActiveComponent = TAB_COMPONENTS[activeTab] ?? DesignTab
 
   return (
-    <aside className="w-72 flex-shrink-0 flex flex-col bg-studio-panel border-l border-studio-border h-full overflow-hidden">
+    <aside className="flex-shrink-0 flex flex-col bg-studio-panel border-l border-studio-border h-full overflow-hidden" style={style}>
       {/* Panel header */}
       <div className="px-4 py-3.5 border-b border-studio-border flex items-center justify-between">
         <h2 className="text-sm font-semibold text-white">{TAB_LABELS[activeTab]}</h2>

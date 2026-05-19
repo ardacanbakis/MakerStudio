@@ -65,6 +65,7 @@ export const useStore = create(
     showShadows:        true,
     cameraPreset:       'perspective',
     _screenshotPending: false,
+    hoveredPart: null,
 
     // ── Cut planner ───────────────────────────────────────
     boardWidth:  122,
@@ -126,6 +127,8 @@ export const useStore = create(
         explodeAmount: 0,
       })
     },
+
+    setHoveredPart: (label) => set({ hoveredPart: label }),
 
     // Screenshot (triggers ScreenshotTrigger inside canvas)
     takeScreenshot:  () => set({ _screenshotPending: true }),

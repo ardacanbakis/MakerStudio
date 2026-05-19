@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { MeshStandardMaterial, MeshBasicMaterial } from 'three'
 import { useStore } from '../../store/useStore'
 import { getWoodTexture } from '../../utils/woodTexture'
 
@@ -12,44 +11,48 @@ const WOOD_ROUGHNESS = {
   mahogany: 0.48, birch: 0.68, cherry: 0.50,
 }
 
-function Board({ position, rotation, args, material }) {
+function Board({ position, rotation, args, color, roughness, metalness = 0.04, map, renderMode, highlight, dim }) {
+  if (renderMode === 'wireframe') {
+    return (
+      <mesh position={position} rotation={rotation} receiveShadow castShadow>
+        <boxGeometry args={args} />
+        <meshBasicMaterial color="#f59e0b" wireframe />
+      </mesh>
+    )
+  }
+  const xray = renderMode === 'xray'
+  const transparent = xray || dim
+  const opacity = xray ? 0.22 : dim ? 0.15 : 1
   return (
-    <mesh position={position} rotation={rotation} receiveShadow castShadow material={material}>
+    <mesh position={position} rotation={rotation} receiveShadow castShadow>
       <boxGeometry args={args} />
+      <meshStandardMaterial
+        color={color} roughness={roughness} metalness={metalness} map={map}
+        transparent={transparent} opacity={opacity} depthWrite={!xray && !dim}
+        emissive={highlight ? '#f59e0b' : '#000000'}
+        emissiveIntensity={highlight ? 0.45 : 0}
+      />
     </mesh>
   )
-}
-
-function useMaterials(woodSpecies, renderMode, showTexture) {
-  return useMemo(() => {
-    const color    = WOOD_COLORS[woodSpecies] ?? WOOD_COLORS.oak
-    const roughness = WOOD_ROUGHNESS[woodSpecies] ?? 0.65
-    const map      = showTexture ? getWoodTexture(woodSpecies) : null
-    if (renderMode === 'wireframe') {
-      const wf = new MeshBasicMaterial({ color: '#f59e0b', wireframe: true })
-      return { main: wf, back: wf, door: wf }
-    }
-    const xray = renderMode === 'xray'
-    const base = { color, roughness, metalness: 0.04, map }
-    const xrOpts = xray ? { transparent: true, opacity: 0.22, depthWrite: false } : {}
-    return {
-      main: new MeshStandardMaterial({ ...base, ...xrOpts }),
-      back: new MeshStandardMaterial({ ...base, roughness: roughness + 0.12, metalness: 0.01, ...xrOpts }),
-      door: new MeshStandardMaterial({ ...base, roughness: roughness - 0.08, metalness: 0.06, ...xrOpts }),
-    }
-  }, [woodSpecies, renderMode, showTexture])
 }
 
 export default function CabinetUnit() {
   const {
     dimensions, woodSpecies, woodThickness, shelfCount,
-    renderMode, showTexture, explodeAmount, doorsOpen,
+    renderMode, showTexture, explodeAmount, doorsOpen, hoveredPart,
   } = useStore()
   const { width: W, height: H, depth: D } = dimensions
   const T = woodThickness
   const ex = explodeAmount
 
-  const { main, back, door } = useMaterials(woodSpecies, renderMode, showTexture)
+  const color = WOOD_COLORS[woodSpecies] ?? WOOD_COLORS.oak
+  const roughness = WOOD_ROUGHNESS[woodSpecies] ?? 0.65
+  const map = useMemo(() => showTexture ? getWoodTexture(woodSpecies) : null, [woodSpecies, showTexture])
+
+  const matProps = { color, roughness, map, renderMode }
+
+  const hl = (label) => hoveredPart === label
+  const dm = (label) => hoveredPart !== null && hoveredPart !== label
 
   const shelfYs = useMemo(() => {
     const innerH = H - 2 * T
@@ -70,13 +73,16 @@ export default function CabinetUnit() {
   const doorH     = H - T * 2
   const doorT     = T * 0.8
 
+  const doorRoughness = roughness - 0.08
+  const doorMetalness = 0.06
+
   return (
     <group position={[0, groupY, 0]}>
       {/* Carcass */}
-      <Board position={[-(W/2 - T/2) - spreadX, 0, 0]} args={[T, H, D]} material={main} />
-      <Board position={[ (W/2 - T/2) + spreadX, 0, 0]} args={[T, H, D]} material={main} />
-      <Board position={[0,  H/2 - T/2 + spreadY, 0]} args={[W - 2*T, T, D]} material={main} />
-      <Board position={[0, -H/2 + T/2 - spreadY, 0]} args={[W - 2*T, T, D]} material={main} />
+      <Board position={[-(W/2 - T/2) - spreadX, 0, 0]} args={[T, H, D]} {...matProps} highlight={hl('Side panels')} dim={dm('Side panels')} />
+      <Board position={[ (W/2 - T/2) + spreadX, 0, 0]} args={[T, H, D]} {...matProps} highlight={hl('Side panels')} dim={dm('Side panels')} />
+      <Board position={[0,  H/2 - T/2 + spreadY, 0]} args={[W - 2*T, T, D]} {...matProps} highlight={hl('Top panel')} dim={dm('Top panel')} />
+      <Board position={[0, -H/2 + T/2 - spreadY, 0]} args={[W - 2*T, T, D]} {...matProps} highlight={hl('Bottom panel')} dim={dm('Bottom panel')} />
 
       {/* Shelves */}
       {shelfYs.map((y, i) => {
@@ -88,27 +94,42 @@ export default function CabinetUnit() {
             key={i}
             position={[0, y + dir * spreadY * 0.5, 0]}
             args={[W - 2*T, T, D - 1]}
-            material={main}
+            {...matProps}
+            highlight={hl('Shelves')}
+            dim={dm('Shelves')}
           />
         )
       })}
 
       {/* Back panel */}
-      <Board position={[0, 0, -(D/2 - 0.3) - spreadZ]} args={[W, H, 0.6]} material={back} />
+      <Board position={[0, 0, -(D/2 - 0.3) - spreadZ]} args={[W, H, 0.6]} {...matProps} roughness={roughness + 0.12} metalness={0.01} highlight={hl('Back panel')} dim={dm('Back panel')} />
 
       {/* Left door — pivots from its left edge */}
       {!ex && (
         <group position={[-(W/2 - T) - 0.1, 0, D/2]}>
           <group rotation={[0, -doorAngle, 0]}>
-            <mesh
-              position={[doorW / 2, 0, 0]}
-              receiveShadow castShadow material={door}
-            >
+            <mesh position={[doorW / 2, 0, 0]} receiveShadow castShadow>
               <boxGeometry args={[doorW, doorH, doorT]} />
+              <meshStandardMaterial
+                color={color} roughness={doorRoughness} metalness={doorMetalness} map={map}
+                transparent={renderMode === 'xray' || dm('Door panels')}
+                opacity={renderMode === 'xray' ? 0.22 : dm('Door panels') ? 0.15 : 1}
+                depthWrite={renderMode !== 'xray' && !dm('Door panels')}
+                emissive={hl('Door panels') ? '#f59e0b' : '#000000'}
+                emissiveIntensity={hl('Door panels') ? 0.45 : 0}
+              />
             </mesh>
             {/* Door pull — small cylinder */}
-            <mesh position={[doorW * 0.85, 0, doorT / 2 + 0.8]} material={door}>
+            <mesh position={[doorW * 0.85, 0, doorT / 2 + 0.8]}>
               <cylinderGeometry args={[0.6, 0.6, 4, 12]} />
+              <meshStandardMaterial
+                color={color} roughness={doorRoughness} metalness={doorMetalness} map={map}
+                transparent={renderMode === 'xray' || dm('Door panels')}
+                opacity={renderMode === 'xray' ? 0.22 : dm('Door panels') ? 0.15 : 1}
+                depthWrite={renderMode !== 'xray' && !dm('Door panels')}
+                emissive={hl('Door panels') ? '#f59e0b' : '#000000'}
+                emissiveIntensity={hl('Door panels') ? 0.45 : 0}
+              />
             </mesh>
           </group>
         </group>
@@ -118,14 +139,27 @@ export default function CabinetUnit() {
       {!ex && (
         <group position={[(W/2 - T) + 0.1, 0, D/2]}>
           <group rotation={[0, doorAngle, 0]}>
-            <mesh
-              position={[-doorW / 2, 0, 0]}
-              receiveShadow castShadow material={door}
-            >
+            <mesh position={[-doorW / 2, 0, 0]} receiveShadow castShadow>
               <boxGeometry args={[doorW, doorH, doorT]} />
+              <meshStandardMaterial
+                color={color} roughness={doorRoughness} metalness={doorMetalness} map={map}
+                transparent={renderMode === 'xray' || dm('Door panels')}
+                opacity={renderMode === 'xray' ? 0.22 : dm('Door panels') ? 0.15 : 1}
+                depthWrite={renderMode !== 'xray' && !dm('Door panels')}
+                emissive={hl('Door panels') ? '#f59e0b' : '#000000'}
+                emissiveIntensity={hl('Door panels') ? 0.45 : 0}
+              />
             </mesh>
-            <mesh position={[-doorW * 0.85, 0, doorT / 2 + 0.8]} material={door}>
+            <mesh position={[-doorW * 0.85, 0, doorT / 2 + 0.8]}>
               <cylinderGeometry args={[0.6, 0.6, 4, 12]} />
+              <meshStandardMaterial
+                color={color} roughness={doorRoughness} metalness={doorMetalness} map={map}
+                transparent={renderMode === 'xray' || dm('Door panels')}
+                opacity={renderMode === 'xray' ? 0.22 : dm('Door panels') ? 0.15 : 1}
+                depthWrite={renderMode !== 'xray' && !dm('Door panels')}
+                emissive={hl('Door panels') ? '#f59e0b' : '#000000'}
+                emissiveIntensity={hl('Door panels') ? 0.45 : 0}
+              />
             </mesh>
           </group>
         </group>

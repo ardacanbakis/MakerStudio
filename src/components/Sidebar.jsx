@@ -41,7 +41,7 @@ const TABS = [
   },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ style }) {
   const {
     activeTab, setActiveTab,
     furnitureType, setFurnitureType,
@@ -61,7 +61,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-60 flex-shrink-0 flex flex-col bg-studio-panel border-r border-studio-border h-full overflow-hidden">
+    <aside className="flex-shrink-0 flex flex-col bg-studio-panel border-r border-studio-border h-full overflow-hidden" style={style}>
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-4 border-b border-studio-border">
         <div className="w-7 h-7 rounded-md bg-amber-500 flex items-center justify-center flex-shrink-0">
