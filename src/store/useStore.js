@@ -34,6 +34,27 @@ export const SIZE_PRESETS = [
   { label: 'Kitchen Cabinet',dims:{ width: 90, height: 100, depth: 35 }, shelves: 2, type: 'cabinet' },
 ]
 
+export const ROOM_SETS = {
+  'Home Office': [
+    { label: 'Standing Desk',  dims: { width: 160, height: 110, depth: 70 }, shelves: 0, type: 'desk' },
+    { label: 'Monitor Shelf',  dims: { width: 120, height: 120, depth: 35 }, shelves: 3, type: 'shelf' },
+    { label: 'Filing Cabinet', dims: { width: 45,  height: 70,  depth: 50 }, shelves: 2, type: 'cabinet' },
+    { label: 'Credenza',       dims: { width: 180, height: 75,  depth: 50 }, shelves: 1, type: 'shelf' },
+  ],
+  'Bedroom': [
+    { label: 'Double Wardrobe',dims: { width: 120, height: 200, depth: 58 }, shelves: 2, type: 'shelf' },
+    { label: 'Bedside Table',  dims: { width: 45,  height: 65,  depth: 38 }, shelves: 1, type: 'cabinet' },
+    { label: 'Tall Dresser',   dims: { width: 50,  height: 140, depth: 45 }, shelves: 4, type: 'shelf' },
+    { label: 'Blanket Box',    dims: { width: 100, height: 45,  depth: 50 }, shelves: 0, type: 'shelf' },
+  ],
+  'Living Room': [
+    { label: 'TV Console',     dims: { width: 150, height: 55,  depth: 45 }, shelves: 1, type: 'shelf' },
+    { label: 'Display Cabinet',dims: { width: 90,  height: 120, depth: 35 }, shelves: 2, type: 'cabinet' },
+    { label: 'Book Wall',      dims: { width: 90,  height: 200, depth: 30 }, shelves: 5, type: 'shelf' },
+    { label: 'Side Table',     dims: { width: 50,  height: 60,  depth: 50 }, shelves: 1, type: 'shelf' },
+  ],
+}
+
 export const useStore = create(
   subscribeWithSelector((set, get) => ({
     // ── Core dimensions (cm) ──────────────────────────────
@@ -56,6 +77,10 @@ export const useStore = create(
     explodeAmount:      0,         // 0–1
     doorsOpen:          false,     // cabinet door state
     showTexture:        true,
+
+    // ── Panel layout ─────────────────────────────────────
+    leftPanelWidth:  Number(localStorage.getItem('ms-left-w'))  || 240,
+    rightPanelWidth: Number(localStorage.getItem('ms-right-w')) || 288,
 
     // ── Viewport ──────────────────────────────────────────
     activeTab:          'design',
@@ -129,6 +154,15 @@ export const useStore = create(
     },
 
     setHoveredPart: (label) => set({ hoveredPart: label }),
+
+    setLeftPanelWidth: (w) => {
+      localStorage.setItem('ms-left-w', String(w))
+      set({ leftPanelWidth: w })
+    },
+    setRightPanelWidth: (w) => {
+      localStorage.setItem('ms-right-w', String(w))
+      set({ rightPanelWidth: w })
+    },
 
     // Screenshot (triggers ScreenshotTrigger inside canvas)
     takeScreenshot:  () => set({ _screenshotPending: true }),

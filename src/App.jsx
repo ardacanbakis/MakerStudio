@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import Sidebar from './components/Sidebar'
 import Viewport from './components/Viewport'
 import RightPanel from './components/RightPanel'
@@ -11,11 +11,10 @@ const MIN_W = 160
 const MAX_W = 420
 
 function ResizeHandle({ onResize }) {
-  const drag = { active: false, lastX: 0 }
-  const ref = { current: drag }
+  const ref = useRef({ active: false, lastX: 0 })
   return (
     <div
-      className="w-1 flex-shrink-0 hover:bg-amber-500/40 active:bg-amber-500/70 cursor-col-resize transition-colors z-10"
+      className="w-1 flex-shrink-0 hover:bg-amber-500/50 cursor-col-resize transition-colors z-10 group"
       style={{ background: 'rgba(42,42,42,1)', touchAction: 'none' }}
       onPointerDown={(e) => {
         ref.current.active = true
@@ -29,6 +28,7 @@ function ResizeHandle({ onResize }) {
         onResize(delta)
       }}
       onPointerUp={() => { ref.current.active = false }}
+      onPointerCancel={() => { ref.current.active = false }}
     />
   )
 }
@@ -36,27 +36,10 @@ function ResizeHandle({ onResize }) {
 export default function App() {
   useKeyboardShortcuts()
   const { showWelcome, dismiss } = useWelcomeScreen()
-  const loadAutosave = useStore((s) => s.loadAutosave)
+  const { loadAutosave, leftPanelWidth, rightPanelWidth, setLeftPanelWidth, setRightPanelWidth } = useStore()
 
-  const [leftW, setLeftW] = useState(() => {
-    const s = localStorage.getItem('ms-left-w')
-    return s ? Math.max(MIN_W, Math.min(MAX_W, Number(s))) : 240
-  })
-  const [rightW, setRightW] = useState(() => {
-    const s = localStorage.getItem('ms-right-w')
-    return s ? Math.max(MIN_W, Math.min(MAX_W, Number(s))) : 288
-  })
-
-  const resizeLeft = (delta) => setLeftW(w => {
-    const next = Math.max(MIN_W, Math.min(MAX_W, w + delta))
-    localStorage.setItem('ms-left-w', String(next))
-    return next
-  })
-  const resizeRight = (delta) => setRightW(w => {
-    const next = Math.max(MIN_W, Math.min(MAX_W, w - delta))
-    localStorage.setItem('ms-right-w', String(next))
-    return next
-  })
+  const resizeLeft  = (d) => setLeftPanelWidth( Math.max(MIN_W, Math.min(MAX_W, leftPanelWidth  + d)))
+  const resizeRight = (d) => setRightPanelWidth(Math.max(MIN_W, Math.min(MAX_W, rightPanelWidth - d)))
 
   useEffect(() => {
     loadAutosave()
@@ -67,11 +50,11 @@ export default function App() {
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-studio-bg">
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar style={{ width: leftW }} />
+        <Sidebar style={{ width: leftPanelWidth }} />
         <ResizeHandle onResize={resizeLeft} />
         <Viewport />
         <ResizeHandle onResize={resizeRight} />
-        <RightPanel style={{ width: rightW }} />
+        <RightPanel style={{ width: rightPanelWidth }} />
       </div>
       <StatusBar />
     </div>

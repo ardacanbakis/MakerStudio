@@ -1,4 +1,4 @@
-import { useStore, SIZE_PRESETS } from '../store/useStore'
+import { useStore, SIZE_PRESETS, ROOM_SETS } from '../store/useStore'
 import { fmt, fromCm, toCm, UNITS } from '../utils/units'
 
 const WOOD_SPECIES = [
@@ -84,7 +84,7 @@ export default function DesignTab() {
         </div>
       </div>
 
-      {/* Size presets */}
+      {/* Quick presets */}
       <section className="panel-section">
         <p className="label-xs mb-2.5">Quick Presets</p>
         <div className="grid grid-cols-2 gap-1">
@@ -99,6 +99,35 @@ export default function DesignTab() {
                 {fmt(p.dims.width, units, false)}×{fmt(p.dims.height, units, false)}{UNITS[units].short}
               </p>
             </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Room sets */}
+      <section className="panel-section">
+        <p className="label-xs mb-2.5">Room Sets</p>
+        <div className="flex flex-col gap-3">
+          {Object.entries(ROOM_SETS).map(([setName, pieces]) => (
+            <div key={setName}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-xs text-gray-600 font-semibold tracking-wide uppercase">{setName}</span>
+                <div className="flex-1 h-px bg-white/5" />
+              </div>
+              <div className="grid grid-cols-2 gap-1">
+                {pieces.map((p) => (
+                  <button
+                    key={p.label}
+                    onClick={() => applyPreset(p)}
+                    className="text-left px-2 py-1.5 rounded-md border border-white/5 hover:border-violet-500/30 hover:bg-violet-500/5 transition-all group"
+                  >
+                    <p className="text-xs text-gray-300 group-hover:text-violet-300 transition-colors">{p.label}</p>
+                    <p className="text-xs text-gray-600 font-mono mt-0.5">
+                      {fmt(p.dims.width, units, false)}×{fmt(p.dims.height, units, false)}{UNITS[units].short}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </section>

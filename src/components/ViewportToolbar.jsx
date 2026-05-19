@@ -1,5 +1,15 @@
 import { useStore } from '../store/useStore'
 
+const MIN_W = 160
+const MAX_W = 420
+
+const LAYOUT_PRESETS = [
+  { id: 'balanced',  label: '⊞',    title: 'Balanced',     left: 240, right: 288 },
+  { id: 'wide',      label: '↔',    title: 'Wide Viewport', left: 180, right: 180 },
+  { id: 'focusL',   label: '◧',    title: 'Focus Left',   left: 380, right: 200 },
+  { id: 'focusR',   label: '◨',    title: 'Focus Right',  left: 200, right: 380 },
+]
+
 const RENDER_MODES = [
   { id: 'solid',     label: 'Solid' },
   { id: 'wireframe', label: 'Wire' },
@@ -26,13 +36,43 @@ export default function ViewportToolbar() {
     furnitureType,
     _past, _future, undo, redo,
     takeScreenshot,
+    leftPanelWidth, rightPanelWidth,
+    setLeftPanelWidth, setRightPanelWidth,
   } = useStore()
+
+  const applyLayout = ({ left, right }) => {
+    setLeftPanelWidth(Math.max(MIN_W, Math.min(MAX_W, left)))
+    setRightPanelWidth(Math.max(MIN_W, Math.min(MAX_W, right)))
+  }
+
+  const activeLayout = LAYOUT_PRESETS.find(
+    (p) => p.left === leftPanelWidth && p.right === rightPanelWidth
+  )?.id ?? null
 
   const canUndo = _past.length > 0
   const canRedo = _future.length > 0
 
   return (
-    <div className="absolute top-3 left-3 right-3 z-10 flex items-center flex-wrap gap-2 pointer-events-none">
+    <div className="absolute top-3 left-3 right-3 z-10 flex flex-col gap-2 pointer-events-none">
+      {/* ── Row 1: controls ── */}
+      <div className="flex items-center flex-wrap gap-2">
+
+      {/* Layout presets */}
+      <ToolGroup>
+        <span className="text-xs text-gray-700 px-1.5 font-mono select-none">LAYOUT</span>
+        {LAYOUT_PRESETS.map((p) => (
+          <ToolBtn
+            key={p.id}
+            active={activeLayout === p.id}
+            activeClass="bg-violet-500/25 text-violet-300"
+            onClick={() => applyLayout(p)}
+            title={p.title}
+          >
+            {p.label}
+          </ToolBtn>
+        ))}
+      </ToolGroup>
+
       {/* Render mode */}
       <ToolGroup>
         {RENDER_MODES.map((m) => (
@@ -139,6 +179,8 @@ export default function ViewportToolbar() {
         </svg>
         PNG
       </button>
+
+      </div>{/* end row 1 */}
     </div>
   )
 }
