@@ -184,26 +184,46 @@ const SOCIAL_LINKS = [
   { href: 'http://linkedin.com/in/ardacanbakis',            icon: <LinkedinIcon />, label: 'LinkedIn' },
 ]
 
-// ─── Neon grid — spells "MS" ───────────────────────────────────────────────────
+// ─── Neon grid — spells "THEO" ────────────────────────────────────────────────
 
-// 16-col × 12-row grid
+// 16-col × 12-row grid; each letter occupies 4 cols with no gap between blocks
 const ACTIVE_CELLS = [
-  // M  (cols 2–6, rows 2–8)
-  [2,2],[6,2],
-  [2,3],[3,3],[5,3],[6,3],
-  [2,4],[4,4],[6,4],
-  [2,5],[6,5],
-  [2,6],[6,6],
-  [2,7],[6,7],
-  [2,8],[6,8],
-  // S  (cols 10–14, rows 2–8)
-  [11,2],[12,2],[13,2],
-  [10,3],
-  [10,4],
-  [11,5],[12,5],[13,5],
-  [14,6],
-  [14,7],
-  [11,8],[12,8],[13,8],
+  // T (cols 0–3, stem centred at 1–2)
+  [0,1],[1,1],[2,1],[3,1],
+  [1,2],[2,2],
+  [1,3],[2,3],
+  [1,4],[2,4],
+  [1,5],[2,5],
+  [1,6],[2,6],
+  [1,7],[2,7],
+  [1,8],[2,8],
+  // H (cols 4–7)
+  [4,1],[7,1],
+  [4,2],[7,2],
+  [4,3],[7,3],
+  [4,4],[5,4],[6,4],[7,4],
+  [4,5],[7,5],
+  [4,6],[7,6],
+  [4,7],[7,7],
+  [4,8],[7,8],
+  // E (cols 8–11)
+  [8,1],[9,1],[10,1],[11,1],
+  [8,2],
+  [8,3],
+  [8,4],[9,4],[10,4],
+  [8,5],
+  [8,6],
+  [8,7],
+  [8,8],[9,8],[10,8],[11,8],
+  // O (cols 12–15)
+  [12,1],[13,1],[14,1],[15,1],
+  [12,2],[15,2],
+  [12,3],[15,3],
+  [12,4],[15,4],
+  [12,5],[15,5],
+  [12,6],[15,6],
+  [12,7],[15,7],
+  [12,8],[13,8],[14,8],[15,8],
 ]
 
 const WELCOME_KEYFRAMES = `
@@ -402,16 +422,28 @@ export function WelcomeScreen({ onDismiss }) {
         {/* ── Step 0: Hero ────────────────────────────────────────── */}
         {step === 0 && (
           <div className="text-center space-y-6">
-            {/* Logo */}
-            <div
-              className="w-28 h-28 rounded-2xl bg-amber-500 flex items-center justify-center mx-auto"
-              style={{
-                boxShadow: `0 0 60px ${neonSoft}`,
-                animation: 'welcome-logo-in 1.4s cubic-bezier(0.22,1,0.36,1) both',
-              }}
-            >
-              <span className="text-black font-bold text-6xl leading-none select-none">M</span>
-            </div>
+            {/* Logo — amber on dark, white card with blue M on light */}
+            {dark ? (
+              <div
+                className="w-28 h-28 rounded-2xl bg-amber-500 flex items-center justify-center mx-auto"
+                style={{
+                  boxShadow: `0 0 60px ${neonSoft}`,
+                  animation: 'welcome-logo-in 1.4s cubic-bezier(0.22,1,0.36,1) both',
+                }}
+              >
+                <span className="text-black font-bold text-6xl leading-none select-none">M</span>
+              </div>
+            ) : (
+              <div
+                className="w-28 h-28 rounded-2xl bg-white border-2 border-blue-200 flex items-center justify-center mx-auto"
+                style={{
+                  boxShadow: `0 0 60px ${neonSoft}, 0 8px 32px rgba(59,130,246,0.18)`,
+                  animation: 'welcome-logo-in 1.4s cubic-bezier(0.22,1,0.36,1) both',
+                }}
+              >
+                <span className="font-bold text-6xl leading-none select-none" style={{ color: '#3b82f6' }}>M</span>
+              </div>
+            )}
 
             <div>
               <h1
