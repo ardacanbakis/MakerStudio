@@ -13,6 +13,7 @@ import FloatingShelf from './scene/FloatingShelf'
 import DimensionLabels from './scene/DimensionLabels'
 import CameraController from './scene/CameraController'
 import ScreenshotTrigger from './scene/ScreenshotTrigger'
+import ExportTrigger from './scene/ExportTrigger'
 import ViewportToolbar from './ViewportToolbar'
 import ExplodePanel from './ExplodePanel'
 
@@ -33,6 +34,7 @@ function Scene() {
     <>
       <CameraController />
       <ScreenshotTrigger />
+      <ExportTrigger />
 
       {/* Lighting rig */}
       <ambientLight intensity={0.45} color="#fff8f0" />

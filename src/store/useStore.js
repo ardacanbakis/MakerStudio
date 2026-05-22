@@ -117,6 +117,7 @@ export const useStore = create(
     showShadows:        true,
     cameraPreset:       'perspective',
     _screenshotPending: false,
+    _exportPending:     null,   // null | 'gltf' | 'stl'
     hoveredPart: null,
 
     // ── Cut planner ───────────────────────────────────────
@@ -192,8 +193,12 @@ export const useStore = create(
     },
 
     // Screenshot (triggers ScreenshotTrigger inside canvas)
-    takeScreenshot:  () => set({ _screenshotPending: true }),
+    takeScreenshot:   () => set({ _screenshotPending: true }),
     _clearScreenshot: () => set({ _screenshotPending: false }),
+
+    // 3D Export (triggers ExportTrigger inside canvas)
+    triggerExport:  (fmt) => set({ _exportPending: fmt }),
+    _clearExport:   ()    => set({ _exportPending: null }),
 
     // Undo / redo
     pushHistory: () => {

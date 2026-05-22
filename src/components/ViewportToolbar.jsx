@@ -36,6 +36,7 @@ export default function ViewportToolbar() {
     furnitureType,
     _past, _future, undo, redo,
     takeScreenshot,
+    triggerExport,
     leftPanelWidth, rightPanelWidth,
     setLeftPanelWidth, setRightPanelWidth,
   } = useStore()
@@ -150,18 +151,41 @@ export default function ViewportToolbar() {
         </button>
       </ToolGroup>
 
-      {/* Screenshot */}
-      <button
-        onClick={takeScreenshot}
-        title="Save viewport as PNG"
-        className="pointer-events-auto flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg bg-black/70 border border-white/8 backdrop-blur text-gray-400 hover:text-white hover:border-amber-500/40 transition-all"
-      >
-        <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
-          <path d="M10.5 8.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
-          <path d="M2 4a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1.172a2 2 0 01-1.414-.586l-.828-.828A2 2 0 009.172 2H6.828a2 2 0 00-1.414.586l-.828.828A2 2 0 013.172 4H2zm.5 2a.5.5 0 110-1 .5.5 0 010 1zm9 2.5a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0z"/>
-        </svg>
-        PNG
-      </button>
+      {/* Export group */}
+      <div className="pointer-events-auto flex items-center bg-black/70 backdrop-blur border border-white/8 rounded-lg p-0.5 gap-0.5">
+        <button
+          onClick={takeScreenshot}
+          title="Save viewport as PNG"
+          className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-md text-gray-400 hover:text-white hover:bg-white/8 transition-all"
+        >
+          <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+            <path d="M10.5 8.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+            <path d="M2 4a2 2 0 00-2 2v6a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1.172a2 2 0 01-1.414-.586l-.828-.828A2 2 0 009.172 2H6.828a2 2 0 00-1.414.586l-.828.828A2 2 0 013.172 4H2zm.5 2a.5.5 0 110-1 .5.5 0 010 1zm9 2.5a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0z"/>
+          </svg>
+          PNG
+        </button>
+        <div className="w-px h-4 bg-white/8" />
+        <button
+          onClick={() => triggerExport('glb')}
+          title="Export as GLB (3D, compatible with Blender, Unity, etc.)"
+          className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-md text-gray-400 hover:text-emerald-300 hover:bg-emerald-500/8 transition-all"
+        >
+          <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
+            <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm3.5 7.5h-2.793l1.647-1.646a.5.5 0 00-.708-.708L7.5 7.293V4.5a.5.5 0 00-1 0v2.793L4.854 5.146a.5.5 0 10-.708.708L5.793 7.5H3a.5.5 0 000 1h2.793L4.146 10.146a.5.5 0 00.708.708L6.5 9.207V12a.5.5 0 001 0V9.207l1.646 1.647a.5.5 0 00.708-.708L8.207 8.5H11.5a.5.5 0 000-1z"/>
+          </svg>
+          GLB
+        </button>
+        <button
+          onClick={() => triggerExport('stl')}
+          title="Export as STL (for 3D printing)"
+          className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-md text-gray-400 hover:text-blue-300 hover:bg-blue-500/8 transition-all"
+        >
+          <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
+            <path d="M8 0a8 8 0 100 16A8 8 0 008 0zm3.5 7.5h-2.793l1.647-1.646a.5.5 0 00-.708-.708L7.5 7.293V4.5a.5.5 0 00-1 0v2.793L4.854 5.146a.5.5 0 10-.708.708L5.793 7.5H3a.5.5 0 000 1h2.793L4.146 10.146a.5.5 0 00.708.708L6.5 9.207V12a.5.5 0 001 0V9.207l1.646 1.647a.5.5 0 00.708-.708L8.207 8.5H11.5a.5.5 0 000-1z"/>
+          </svg>
+          STL
+        </button>
+      </div>
 
       </div>{/* end row 1 */}
     </div>

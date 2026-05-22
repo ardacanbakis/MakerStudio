@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { useStore, FURNITURE_TYPES } from '../store/useStore'
 import { parseProjectJSON, openProjectFile } from '../utils/project'
+import { useWelcomeScreen } from './WelcomeScreen'
 
 const TABS = [
   {
@@ -49,6 +50,7 @@ export default function Sidebar({ style }) {
     showShadows, toggleShadows,
     saveProject, loadProjectData,
   } = useStore()
+  const { show } = useWelcomeScreen()
 
   const handleLoad = async () => {
     try {
@@ -62,16 +64,19 @@ export default function Sidebar({ style }) {
 
   return (
     <aside className="flex-shrink-0 flex flex-col bg-studio-panel border-r border-studio-border h-full overflow-hidden" style={style}>
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 px-4 py-4 border-b border-studio-border">
-        <div className="w-7 h-7 rounded-md bg-amber-500 flex items-center justify-center flex-shrink-0">
+      {/* Logo — click to return to welcome screen */}
+      <button
+        onClick={show}
+        className="flex items-center gap-2.5 px-4 py-4 border-b border-studio-border hover:bg-white/3 transition-colors w-full text-left group"
+      >
+        <div className="w-7 h-7 rounded-md bg-amber-500 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-400 transition-colors">
           <span className="text-black font-bold text-xs leading-none">M</span>
         </div>
         <div>
-          <p className="text-sm font-semibold text-white leading-none">MakerStudio</p>
+          <p className="text-sm font-semibold text-white leading-none group-hover:text-amber-300 transition-colors">MakerStudio</p>
           <p className="text-xs text-gray-500 leading-none mt-0.5">Workshop Suite</p>
         </div>
-      </div>
+      </button>
 
       {/* Furniture type */}
       <div className="p-3 border-b border-studio-border">
