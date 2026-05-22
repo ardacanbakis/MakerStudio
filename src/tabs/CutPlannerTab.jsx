@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useStore } from '../store/useStore'
 
 import { packCutList, computeYield } from '../utils/binPack'
@@ -105,7 +105,10 @@ function CopyButton({ text, children }) {
 
 export default function CutPlannerTab() {
   const store = useStore()
-  const { computeCutList, boardWidth, boardLength, cutKerf, setBoardDimensions, setCutKerf, pushHistory, units } = store
+  const { computeCutList, boardWidth, boardLength, cutKerf, setBoardDimensions, setCutKerf, pushHistory, units, setHoveredPart } = store
+
+  // Clear highlight when leaving this tab so other tabs don't render dimmed
+  useEffect(() => () => setHoveredPart(null), []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const cutList = computeCutList()
 

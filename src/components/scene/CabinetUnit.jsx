@@ -67,14 +67,25 @@ export default function CabinetUnit() {
   const spreadY = ex * 25
   const spreadZ = ex * 40
 
-  // Doors swing open on Y axis
-  const doorAngle = doorsOpen ? -Math.PI / 2.8 : 0
+  // Doors swing open on Y axis; during explode they close and fly forward + apart
+  const doorAngle = doorsOpen && !ex ? -Math.PI / 2.8 : 0
   const doorW     = (W - 2 * T) / 2
   const doorH     = H - T * 2
   const doorT     = T * 0.8
+  const doorFwdZ  = ex * 38  // fly forward away from front face
+  const doorFwdX  = ex * 12  // spread left / right
 
   const doorRoughness = roughness - 0.08
   const doorMetalness = 0.06
+
+  const doorMat = {
+    color, roughness: doorRoughness, metalness: doorMetalness, map,
+    transparent: renderMode === 'xray' || dm('Door panels'),
+    opacity: renderMode === 'xray' ? 0.22 : dm('Door panels') ? 0.15 : 1,
+    depthWrite: renderMode !== 'xray' && !dm('Door panels'),
+    emissive: hl('Door panels') ? '#f59e0b' : '#000000',
+    emissiveIntensity: hl('Door panels') ? 0.45 : 0,
+  }
 
   return (
     <group position={[0, groupY, 0]}>
@@ -104,66 +115,33 @@ export default function CabinetUnit() {
       {/* Back panel */}
       <Board position={[0, 0, -(D/2 - 0.3) - spreadZ]} args={[W, H, 0.6]} {...matProps} roughness={roughness + 0.12} metalness={0.01} highlight={hl('Back panel')} dim={dm('Back panel')} />
 
-      {/* Left door — pivots from its left edge */}
-      {!ex && (
-        <group position={[-(W/2 - T) - 0.1, 0, D/2]}>
-          <group rotation={[0, -doorAngle, 0]}>
-            <mesh position={[doorW / 2, 0, 0]} receiveShadow castShadow>
-              <boxGeometry args={[doorW, doorH, doorT]} />
-              <meshStandardMaterial
-                color={color} roughness={doorRoughness} metalness={doorMetalness} map={map}
-                transparent={renderMode === 'xray' || dm('Door panels')}
-                opacity={renderMode === 'xray' ? 0.22 : dm('Door panels') ? 0.15 : 1}
-                depthWrite={renderMode !== 'xray' && !dm('Door panels')}
-                emissive={hl('Door panels') ? '#f59e0b' : '#000000'}
-                emissiveIntensity={hl('Door panels') ? 0.45 : 0}
-              />
-            </mesh>
-            {/* Door pull — small cylinder */}
-            <mesh position={[doorW * 0.85, 0, doorT / 2 + 0.8]}>
-              <cylinderGeometry args={[0.6, 0.6, 4, 12]} />
-              <meshStandardMaterial
-                color={color} roughness={doorRoughness} metalness={doorMetalness} map={map}
-                transparent={renderMode === 'xray' || dm('Door panels')}
-                opacity={renderMode === 'xray' ? 0.22 : dm('Door panels') ? 0.15 : 1}
-                depthWrite={renderMode !== 'xray' && !dm('Door panels')}
-                emissive={hl('Door panels') ? '#f59e0b' : '#000000'}
-                emissiveIntensity={hl('Door panels') ? 0.45 : 0}
-              />
-            </mesh>
-          </group>
+      {/* Left door — always rendered; flies forward+left during explode */}
+      <group position={[-(W/2 - T) - 0.1 - doorFwdX, 0, D/2 + doorFwdZ]}>
+        <group rotation={[0, -doorAngle, 0]}>
+          <mesh position={[doorW / 2, 0, 0]} receiveShadow castShadow>
+            <boxGeometry args={[doorW, doorH, doorT]} />
+            <meshStandardMaterial {...doorMat} />
+          </mesh>
+          <mesh position={[doorW * 0.85, 0, doorT / 2 + 0.8]}>
+            <cylinderGeometry args={[0.6, 0.6, 4, 12]} />
+            <meshStandardMaterial {...doorMat} />
+          </mesh>
         </group>
-      )}
+      </group>
 
-      {/* Right door — pivots from its right edge */}
-      {!ex && (
-        <group position={[(W/2 - T) + 0.1, 0, D/2]}>
-          <group rotation={[0, doorAngle, 0]}>
-            <mesh position={[-doorW / 2, 0, 0]} receiveShadow castShadow>
-              <boxGeometry args={[doorW, doorH, doorT]} />
-              <meshStandardMaterial
-                color={color} roughness={doorRoughness} metalness={doorMetalness} map={map}
-                transparent={renderMode === 'xray' || dm('Door panels')}
-                opacity={renderMode === 'xray' ? 0.22 : dm('Door panels') ? 0.15 : 1}
-                depthWrite={renderMode !== 'xray' && !dm('Door panels')}
-                emissive={hl('Door panels') ? '#f59e0b' : '#000000'}
-                emissiveIntensity={hl('Door panels') ? 0.45 : 0}
-              />
-            </mesh>
-            <mesh position={[-doorW * 0.85, 0, doorT / 2 + 0.8]}>
-              <cylinderGeometry args={[0.6, 0.6, 4, 12]} />
-              <meshStandardMaterial
-                color={color} roughness={doorRoughness} metalness={doorMetalness} map={map}
-                transparent={renderMode === 'xray' || dm('Door panels')}
-                opacity={renderMode === 'xray' ? 0.22 : dm('Door panels') ? 0.15 : 1}
-                depthWrite={renderMode !== 'xray' && !dm('Door panels')}
-                emissive={hl('Door panels') ? '#f59e0b' : '#000000'}
-                emissiveIntensity={hl('Door panels') ? 0.45 : 0}
-              />
-            </mesh>
-          </group>
+      {/* Right door — always rendered; flies forward+right during explode */}
+      <group position={[(W/2 - T) + 0.1 + doorFwdX, 0, D/2 + doorFwdZ]}>
+        <group rotation={[0, doorAngle, 0]}>
+          <mesh position={[-doorW / 2, 0, 0]} receiveShadow castShadow>
+            <boxGeometry args={[doorW, doorH, doorT]} />
+            <meshStandardMaterial {...doorMat} />
+          </mesh>
+          <mesh position={[-doorW * 0.85, 0, doorT / 2 + 0.8]}>
+            <cylinderGeometry args={[0.6, 0.6, 4, 12]} />
+            <meshStandardMaterial {...doorMat} />
+          </mesh>
         </group>
-      )}
+      </group>
     </group>
   )
 }
