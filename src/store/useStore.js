@@ -17,9 +17,12 @@ function snapshot(s) {
 }
 
 export const FURNITURE_TYPES = [
-  { id: 'shelf',   label: 'Shelf Unit',   icon: '▥', defaultDims: { width: 80,  height: 180, depth: 40 }, shelves: 4 },
-  { id: 'desk',    label: 'Desk',         icon: '▬', defaultDims: { width: 140, height: 75,  depth: 65 }, shelves: 0 },
-  { id: 'cabinet', label: 'Wall Cabinet', icon: '▤', defaultDims: { width: 90,  height: 100, depth: 35 }, shelves: 2 },
+  { id: 'shelf',     label: 'Shelf Unit',   icon: '▥', defaultDims: { width: 80,  height: 180, depth: 40  }, shelves: 4 },
+  { id: 'desk',      label: 'Desk',         icon: '▬', defaultDims: { width: 140, height: 75,  depth: 65  }, shelves: 0 },
+  { id: 'cabinet',   label: 'Wall Cabinet', icon: '▤', defaultDims: { width: 90,  height: 100, depth: 35  }, shelves: 2 },
+  { id: 'table',     label: 'Dining Table', icon: '⊡', defaultDims: { width: 160, height: 76,  depth: 90  }, shelves: 0 },
+  { id: 'bed',       label: 'Bed Frame',    icon: '▬', defaultDims: { width: 160, height: 45,  depth: 200 }, shelves: 0 },
+  { id: 'wallshelf', label: 'Wall Shelf',   icon: '▭', defaultDims: { width: 80,  height: 30,  depth: 25  }, shelves: 0 },
 ]
 
 export const SIZE_PRESETS = [
@@ -32,6 +35,12 @@ export const SIZE_PRESETS = [
   { label: 'Writing Desk', dims: { width: 140, height: 75,  depth: 65 }, shelves: 0, type: 'desk' },
   { label: 'Standing Desk',dims: { width: 160, height: 110, depth: 70 }, shelves: 0, type: 'desk' },
   { label: 'Kitchen Cabinet',dims:{ width: 90, height: 100, depth: 35 }, shelves: 2, type: 'cabinet' },
+  { label: 'Dining Table', dims: { width: 160, height: 76,  depth: 90  }, shelves: 0, type: 'table'     },
+  { label: 'Coffee Table', dims: { width: 120, height: 45,  depth: 60  }, shelves: 0, type: 'table'     },
+  { label: 'Queen Bed',    dims: { width: 160, height: 45,  depth: 200 }, shelves: 0, type: 'bed'       },
+  { label: 'Single Bed',   dims: { width: 90,  height: 40,  depth: 200 }, shelves: 0, type: 'bed'       },
+  { label: 'Wall Shelf S', dims: { width: 60,  height: 25,  depth: 20  }, shelves: 0, type: 'wallshelf' },
+  { label: 'Wall Shelf L', dims: { width: 120, height: 30,  depth: 28  }, shelves: 0, type: 'wallshelf' },
 ]
 
 export const ROOM_SETS = {
@@ -52,6 +61,24 @@ export const ROOM_SETS = {
     { label: 'Display Cabinet',dims: { width: 90,  height: 120, depth: 35 }, shelves: 2, type: 'cabinet' },
     { label: 'Book Wall',      dims: { width: 90,  height: 200, depth: 30 }, shelves: 5, type: 'shelf' },
     { label: 'Side Table',     dims: { width: 50,  height: 60,  depth: 50 }, shelves: 1, type: 'shelf' },
+  ],
+  'Dining Room': [
+    { label: 'Dining Table',    dims: { width: 160, height: 76,  depth: 90  }, shelves: 0, type: 'table'   },
+    { label: 'Sideboard',       dims: { width: 150, height: 80,  depth: 45  }, shelves: 1, type: 'shelf'   },
+    { label: 'Display Cabinet', dims: { width: 90,  height: 180, depth: 35  }, shelves: 3, type: 'cabinet' },
+    { label: 'Bar Cabinet',     dims: { width: 60,  height: 90,  depth: 40  }, shelves: 2, type: 'cabinet' },
+  ],
+  "Kid's Room": [
+    { label: 'Single Bed',      dims: { width: 90,  height: 40,  depth: 200 }, shelves: 0, type: 'bed'      },
+    { label: 'Study Desk',      dims: { width: 100, height: 75,  depth: 55  }, shelves: 0, type: 'desk'     },
+    { label: 'Toy Shelf',       dims: { width: 80,  height: 120, depth: 30  }, shelves: 4, type: 'shelf'    },
+    { label: 'Wall Shelf',      dims: { width: 60,  height: 25,  depth: 20  }, shelves: 0, type: 'wallshelf'},
+  ],
+  'Entryway': [
+    { label: 'Shoe Rack',       dims: { width: 90,  height: 50,  depth: 35  }, shelves: 3, type: 'shelf'    },
+    { label: 'Hall Bench',      dims: { width: 120, height: 50,  depth: 40  }, shelves: 0, type: 'table'    },
+    { label: 'Coat Cabinet',    dims: { width: 60,  height: 190, depth: 35  }, shelves: 1, type: 'cabinet'  },
+    { label: 'Wall Shelf',      dims: { width: 80,  height: 25,  depth: 20  }, shelves: 0, type: 'wallshelf'},
   ],
 }
 

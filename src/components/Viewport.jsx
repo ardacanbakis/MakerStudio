@@ -7,15 +7,22 @@ import { useStore } from '../store/useStore'
 import ShelfUnit from './scene/ShelfUnit'
 import DeskUnit from './scene/DeskUnit'
 import CabinetUnit from './scene/CabinetUnit'
+import DiningTable from './scene/DiningTable'
+import BedFrame from './scene/BedFrame'
+import FloatingShelf from './scene/FloatingShelf'
 import DimensionLabels from './scene/DimensionLabels'
 import CameraController from './scene/CameraController'
 import ScreenshotTrigger from './scene/ScreenshotTrigger'
 import ViewportToolbar from './ViewportToolbar'
+import ExplodePanel from './ExplodePanel'
 
 function FurnitureModel() {
   const furnitureType = useStore((s) => s.furnitureType)
-  if (furnitureType === 'desk')    return <DeskUnit />
-  if (furnitureType === 'cabinet') return <CabinetUnit />
+  if (furnitureType === 'desk')      return <DeskUnit />
+  if (furnitureType === 'cabinet')   return <CabinetUnit />
+  if (furnitureType === 'table')     return <DiningTable />
+  if (furnitureType === 'bed')       return <BedFrame />
+  if (furnitureType === 'wallshelf') return <FloatingShelf />
   return <ShelfUnit />
 }
 
@@ -89,6 +96,7 @@ export default function Viewport() {
   return (
     <div className="flex-1 relative bg-studio-bg overflow-hidden">
       <ViewportToolbar />
+      <ExplodePanel />
 
       <Canvas
         shadows={showShadows}

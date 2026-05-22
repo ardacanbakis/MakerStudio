@@ -31,7 +31,7 @@ export default function ViewportToolbar() {
     showTexture, toggleTexture,
     cameraPreset, setCameraPreset,
     units, setUnits,
-    explodeAmount, setExplodeAmount,
+    explodeAmount,
     doorsOpen, toggleDoorsOpen,
     furnitureType,
     _past, _future, undo, redo,
@@ -138,23 +138,6 @@ export default function ViewportToolbar() {
           </ToolBtn>
         </ToolGroup>
       )}
-
-      {/* Explode slider */}
-      <ToolGroup>
-        <span className="text-xs text-gray-600 px-1.5 font-mono select-none">EXPLODE</span>
-        <div className="flex items-center gap-2 px-2">
-          <input
-            type="range"
-            min={0} max={1} step={0.01}
-            value={explodeAmount}
-            onChange={(e) => setExplodeAmount(Number(e.target.value))}
-            className="w-20 h-1 rounded-full appearance-none cursor-pointer slider-amber bg-gray-700"
-          />
-          <span className="text-xs font-mono text-gray-500 w-6">
-            {Math.round(explodeAmount * 100)}
-          </span>
-        </div>
-      </ToolGroup>
 
       {/* Units */}
       <ToolGroup>
