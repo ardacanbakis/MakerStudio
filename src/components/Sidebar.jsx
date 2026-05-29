@@ -81,22 +81,22 @@ export default function Sidebar({ style }) {
       {/* Furniture type */}
       <div className="p-3 border-b border-studio-border">
         <p className="label-xs mb-2">Furniture Type</p>
-        <div className="flex flex-col gap-1">
+        <div className="grid grid-cols-2 gap-1">
           {FURNITURE_TYPES.map((ft) => {
             const active = furnitureType === ft.id
             return (
               <button
                 key={ft.id}
                 onClick={() => setFurnitureType(ft.id)}
-                className={`flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all border ${
+                title={ft.label}
+                className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium transition-all border ${
                   active
                     ? 'bg-amber-500/10 border-amber-500/25 text-amber-300'
                     : 'border-transparent text-gray-500 hover:text-gray-300 hover:bg-white/5'
                 }`}
               >
-                <span className="text-base leading-none">{ft.icon}</span>
-                {ft.label}
-                {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-amber-400" />}
+                <FurnitureIcon id={ft.icon} active={active} />
+                <span className="truncate">{ft.label}</span>
               </button>
             )
           })}
@@ -156,6 +156,25 @@ export default function Sidebar({ style }) {
         </div>
       </div>
     </aside>
+  )
+}
+
+const FURNITURE_ICONS = {
+  shelf:    <path d="M2 2h12v1H2zm0 3h12v1H2zm0 3h12v1H2zm0 3h12v1H2zm0 3h12v1H2zm-1-12v13h1V2zm13 0v13h-1V2z"/>,
+  desk:     <path d="M1 3a1 1 0 011-1h12a1 1 0 011 1v1H1V3zm0 3h14v1H1V6zm0 2v5h4V8H1zm5 0v5h4V8H6zm5 0v5h3V8h-3z"/>,
+  cabinet:  <path d="M2 1a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V2a1 1 0 00-1-1H2zm0 1h5v12H2V2zm6 0h5v12H8V2zM5 7a.5.5 0 110-1 .5.5 0 010 1zm6 0a.5.5 0 110-1 .5.5 0 010 1z"/>,
+  table:    <path d="M1 4h14v2H1V4zm1 2h1v7H2V6zm10 0h1v7h-1V6zm-8 6h10v1H4v-1z"/>,
+  tvstand:  <path d="M1 5h14v1H1V5zm0 2h3v5H1V7zm4 0h6v5H5V7zm7 0h3v5h-3V7zm-10 5h14v1H2v-1zM5 3l3-2 3 2H5z"/>,
+  bed:      <path d="M1 10V5a1 1 0 011-1h12a1 1 0 011 1v5H1zm0 1h14v2H1v-2zM2 5v5h3V5H2zm4 0v5h4V5H6zm5 0v5h3V5h-3z"/>,
+  wall:     <path d="M1 6h14v3H1V6zm2-4h1v4H3V2zm8 0h1v4h-1V2zm-3 0h1v4H8V2zM3 9h1v5H3V9zm8 0h1v5h-1V9z"/>,
+}
+
+function FurnitureIcon({ id, active }) {
+  const paths = FURNITURE_ICONS[id]
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" className={`w-3.5 h-3.5 flex-shrink-0 ${active ? 'text-amber-400' : 'text-gray-600'}`}>
+      {paths}
+    </svg>
   )
 }
 

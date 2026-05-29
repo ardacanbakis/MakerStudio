@@ -17,21 +17,19 @@ const WOOD_COLORS = {
 }
 
 const FINISHES = [
-  { id: 'raw',     label: 'Raw / Unfinished',  note: 'No protection' },
-  { id: 'oil',     label: 'Danish Oil',         note: 'Penetrating · enhances grain' },
-  { id: 'lacquer', label: 'Clear Lacquer',      note: 'Hard coat · durable' },
-  { id: 'stain',   label: 'Wood Stain + Varnish', note: 'Color + protection' },
-  { id: 'wax',     label: 'Hard Wax Oil',       note: 'Natural · repairable' },
+  { id: 'raw',     label: 'Raw / Unfinished',    note: 'No protection · natural grain',   sheen: 0.05 },
+  { id: 'oil',     label: 'Danish Oil',           note: 'Penetrating · enhances grain',    sheen: 0.30 },
+  { id: 'wax',     label: 'Hard Wax Oil',         note: 'Natural look · repairable',       sheen: 0.38 },
+  { id: 'stain',   label: 'Stain + Varnish',      note: 'Color + durable protection',      sheen: 0.55 },
+  { id: 'lacquer', label: 'Clear Lacquer',         note: 'Hard coat · high sheen',          sheen: 0.90 },
+  { id: 'paint',   label: 'Painted / Chalk Paint', note: 'Opaque color · satin sheen',     sheen: 0.72 },
 ]
 
 function RatingDots({ value, max = 5 }) {
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: max }, (_, i) => (
-        <span
-          key={i}
-          className={`w-1.5 h-1.5 rounded-full ${i < value ? 'bg-amber-400' : 'bg-gray-700'}`}
-        />
+        <span key={i} className={`w-1.5 h-1.5 rounded-full ${i < value ? 'bg-amber-400' : 'bg-gray-700'}`} />
       ))}
     </div>
   )
@@ -49,12 +47,31 @@ function PropRow({ label, value, extra }) {
   )
 }
 
+function SheenBar({ value }) {
+  return (
+    <div className="flex items-center gap-1.5 shrink-0">
+      <div className="w-16 h-1.5 rounded-full bg-gray-800 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all"
+          style={{
+            width: `${value * 100}%`,
+            background: `linear-gradient(90deg, #78716c, #e2e8f0)`,
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
 export default function MaterialsTab() {
-  const { woodSpecies, dimensions, woodThickness, shelfCount, computeWeight, units } = useStore()
-  const data = WOOD_DATA[woodSpecies] ?? WOOD_DATA.oak
+  const {
+    woodSpecies, dimensions, woodThickness, shelfCount,
+    computeWeight, units, surfaceFinish, setSurfaceFinish,
+    paintColor, setPaintColor, pushHistory,
+  } = useStore()
+  const data  = WOOD_DATA[woodSpecies] ?? WOOD_DATA.oak
   const color = WOOD_COLORS[woodSpecies] ?? '#c8a96e'
 
-  // Board volume in m³
   const { width: W, height: H, depth: D } = dimensions
   const T = woodThickness / 100
   const Wm = W / 100, Hm = H / 100, Dm = D / 100
@@ -64,14 +81,15 @@ export default function MaterialsTab() {
     shelfCount * ((Wm - 2 * T) * T * Dm) +
     Wm * Hm * 0.006
 
-  const weightKg = computeWeight()
-  const materialCost = Math.round(boardVolM3 * data.pricePerM3)
-  const hardwareEst  = Math.round(materialCost * 0.15)
-  const finishEst    = Math.round(materialCost * 0.08)
-  const totalEst     = materialCost + hardwareEst + finishEst
+  const weightKg   = computeWeight()
+  const matCost    = Math.round(boardVolM3 * data.pricePerM3)
+  const hwCost     = Math.round(matCost * 0.15)
+  const finishCost = Math.round(matCost * 0.08)
+  const total      = matCost + hwCost + finishCost
 
   return (
     <div className="flex flex-col gap-5">
+
       {/* Species card */}
       <section className="panel-section">
         <p className="label-xs mb-2.5">Selected Species</p>
@@ -79,10 +97,7 @@ export default function MaterialsTab() {
           className="relative overflow-hidden rounded-xl border border-white/8 p-3 flex items-center gap-3"
           style={{ background: `linear-gradient(135deg, ${color}18, transparent)` }}
         >
-          <div
-            className="w-14 h-14 rounded-xl flex-shrink-0 border border-black/20 shadow-inner"
-            style={{ backgroundColor: color }}
-          />
+          <div className="w-14 h-14 rounded-xl flex-shrink-0 border border-black/20 shadow-inner" style={{ backgroundColor: color }} />
           <div>
             <p className="text-base font-semibold capitalize text-white">{woodSpecies}</p>
             <p className="text-xs text-gray-400 mt-0.5">{data.density} kg/m³</p>
@@ -91,18 +106,71 @@ export default function MaterialsTab() {
         </div>
       </section>
 
-      {/* Properties */}
+      {/* Working properties */}
       <section className="panel-section">
         <p className="label-xs mb-2">Working Properties</p>
-        <PropRow label="Durability"    value="" extra={<RatingDots value={data.durable} />} />
-        <PropRow label="Workability"   value="" extra={<RatingDots value={data.work} />} />
-        <PropRow label="Finish quality" value="" extra={<RatingDots value={data.finish} />} />
-        <PropRow label="Grain type"    value={data.grain} />
-        <PropRow label="Density"       value={`${data.density} kg/m³`} />
-        <PropRow label="Est. weight"   value={`${weightKg} kg`} />
+        <PropRow label="Durability"     extra={<RatingDots value={data.durable} />} />
+        <PropRow label="Workability"    extra={<RatingDots value={data.work} />} />
+        <PropRow label="Finish quality" extra={<RatingDots value={data.finish} />} />
+        <PropRow label="Grain type"     value={data.grain} />
+        <PropRow label="Density"        value={`${data.density} kg/m³`} />
+        <PropRow label="Est. weight"    value={`${weightKg} kg`} />
       </section>
 
-      {/* Dimensions summary */}
+      {/* Surface finish */}
+      <section className="panel-section">
+        <p className="label-xs mb-2.5">Surface Finish</p>
+        <div className="flex flex-col gap-1.5">
+          {FINISHES.map((f) => {
+            const active = surfaceFinish === f.id
+            return (
+              <button
+                key={f.id}
+                onClick={() => { pushHistory(); setSurfaceFinish(f.id) }}
+                className={`text-left px-2.5 py-2 rounded-lg border transition-all ${
+                  active
+                    ? 'border-amber-500/50 bg-amber-500/10'
+                    : 'border-white/5 hover:border-white/15 hover:bg-white/[0.03]'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className={`text-xs font-medium ${active ? 'text-amber-300' : 'text-gray-300'}`}>{f.label}</p>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <SheenBar value={f.sheen} />
+                    {active && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />}
+                  </div>
+                </div>
+                <p className="text-xs text-gray-600 mt-0.5">{f.note}</p>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Paint color picker — only when finish is 'paint' */}
+        {surfaceFinish === 'paint' && (
+          <div className="mt-3 flex items-center gap-3 px-2.5 py-2.5 rounded-lg border border-white/8 bg-white/[0.03]">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-xs text-gray-400 font-medium">Paint Color</span>
+              <span className="text-xs text-gray-600">Click swatch to change</span>
+            </div>
+            <label className="ml-auto cursor-pointer flex items-center gap-2">
+              <div
+                className="w-10 h-10 rounded-lg border-2 border-white/20 shadow-inner"
+                style={{ backgroundColor: paintColor }}
+              />
+              <input
+                type="color"
+                value={paintColor}
+                onChange={(e) => setPaintColor(e.target.value)}
+                onBlur={pushHistory}
+                className="sr-only"
+              />
+            </label>
+          </div>
+        )}
+      </section>
+
+      {/* Material volume */}
       <section className="panel-section">
         <p className="label-xs mb-2">Material Volume</p>
         <div className="bg-white/[0.02] border border-white/5 rounded-lg p-3 space-y-1.5">
@@ -127,34 +195,17 @@ export default function MaterialsTab() {
       <section className="panel-section">
         <p className="label-xs mb-2">Cost Estimate</p>
         <div className="space-y-1.5">
-          <CostRow label="Lumber" value={materialCost} />
-          <CostRow label="Hardware" value={hardwareEst} note="hinges, cam locks" />
-          <CostRow label="Finish" value={finishEst} note="oil, stain, etc." />
+          <CostRow label="Lumber"   value={matCost}    note="retail rate" />
+          <CostRow label="Hardware" value={hwCost}     note="hinges, locks" />
+          <CostRow label="Finish"   value={finishCost} note="oil, stain, etc." />
           <div className="flex items-center justify-between pt-2 border-t border-white/8 mt-2">
             <span className="text-xs font-semibold text-gray-200">Total estimate</span>
-            <span className="text-sm font-mono text-amber-400 font-bold">${totalEst}</span>
+            <span className="text-sm font-mono text-amber-400 font-bold">${total}</span>
           </div>
         </div>
-        <p className="text-xs text-gray-700 mt-2">
-          Estimates use retail market rates. Verify with local suppliers.
-        </p>
+        <p className="text-xs text-gray-700 mt-2">Uses retail market rates. Verify with local suppliers.</p>
       </section>
 
-      {/* Finish picker */}
-      <section>
-        <p className="label-xs mb-2.5">Surface Finish</p>
-        <div className="flex flex-col gap-1">
-          {FINISHES.map((f) => (
-            <button
-              key={f.id}
-              className="text-left px-2.5 py-2 rounded-md border border-white/5 hover:border-white/15 hover:bg-white/[0.03] transition-all"
-            >
-              <p className="text-xs text-gray-300">{f.label}</p>
-              <p className="text-xs text-gray-600 mt-0.5">{f.note}</p>
-            </button>
-          ))}
-        </div>
-      </section>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useStore, SIZE_PRESETS, ROOM_SETS } from '../store/useStore'
+import { useStore, SIZE_PRESETS, ROOM_SETS, FURNITURE_TYPES } from '../store/useStore'
 import { fmt, fromCm, toCm, UNITS } from '../utils/units'
 
 const WOOD_SPECIES = [
@@ -66,6 +66,7 @@ function Section({ title, badge, defaultOpen = true, children }) {
 }
 
 export default function DesignTab() {
+  const [showAllPresets, setShowAllPresets] = useState(false)
   const {
     dimensions, setDimension,
     woodSpecies, setWoodSpecies,
@@ -73,11 +74,16 @@ export default function DesignTab() {
     shelfCount, setShelfCount,
     plasticParts, setPlasticParts,
     units, setUnits,
+    furnitureType,
     applyPreset, pushHistory,
   } = useStore()
 
   const { width: W, height: H, depth: D } = dimensions
   const volM3 = (W * H * D / 1_000_000).toFixed(3)
+  const ftLabel = FURNITURE_TYPES.find((f) => f.id === furnitureType)?.label ?? furnitureType
+  const filteredPresets = showAllPresets
+    ? SIZE_PRESETS
+    : SIZE_PRESETS.filter((p) => p.type === furnitureType)
 
   return (
     <div className="flex flex-col gap-3">
@@ -199,10 +205,21 @@ export default function DesignTab() {
         )}
       </Section>
 
-      {/* Quick Presets */}
-      <Section title="Presets" defaultOpen={false}>
+      {/* Quick Presets — filtered by current furniture type */}
+      <Section title="Presets" badge={ftLabel} defaultOpen={true}>
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs text-gray-600">
+            {filteredPresets.length} {showAllPresets ? 'total' : `for ${ftLabel}`}
+          </span>
+          <button
+            onClick={() => setShowAllPresets((v) => !v)}
+            className="text-xs text-gray-600 hover:text-amber-400 transition-colors"
+          >
+            {showAllPresets ? 'Show current type' : 'Show all'}
+          </button>
+        </div>
         <div className="grid grid-cols-2 gap-1.5">
-          {SIZE_PRESETS.map((p) => (
+          {filteredPresets.map((p) => (
             <button
               key={p.label}
               onClick={() => applyPreset(p)}
@@ -214,6 +231,9 @@ export default function DesignTab() {
               </p>
             </button>
           ))}
+          {filteredPresets.length === 0 && (
+            <p className="col-span-2 text-xs text-gray-700 text-center py-3">No presets for this type</p>
+          )}
         </div>
       </Section>
 

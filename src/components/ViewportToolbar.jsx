@@ -34,12 +34,14 @@ export default function ViewportToolbar() {
     explodeAmount,
     doorsOpen, toggleDoorsOpen,
     furnitureType,
+    assemblyStep, setAssemblyStep, exitAssembly,
     _past, _future, undo, redo,
     takeScreenshot,
     triggerExport,
     leftPanelWidth, rightPanelWidth,
     setLeftPanelWidth, setRightPanelWidth,
   } = useStore()
+  const inAssembly = assemblyStep >= 0
 
   const applyLayout = ({ left, right }) => {
     setLeftPanelWidth(Math.max(MIN_W, Math.min(MAX_W, left)))
@@ -126,8 +128,20 @@ export default function ViewportToolbar() {
 
       <div className="flex-1" />
 
+      {/* Assembly mode toggle */}
+      <ToolGroup>
+        <ToolBtn
+          active={inAssembly}
+          activeClass="bg-cyan-500/25 text-cyan-300"
+          onClick={() => inAssembly ? exitAssembly() : setAssemblyStep(0)}
+          title="Assembly step-by-step view (A)"
+        >
+          {inAssembly ? '⬡ Exit Assembly' : '⬡ Assembly'}
+        </ToolBtn>
+      </ToolGroup>
+
       {/* Cabinet door toggle */}
-      {furnitureType === 'cabinet' && explodeAmount === 0 && (
+      {furnitureType === 'cabinet' && explodeAmount === 0 && !inAssembly && (
         <ToolGroup>
           <ToolBtn
             active={doorsOpen}

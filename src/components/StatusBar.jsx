@@ -4,12 +4,13 @@ import { fmt } from '../utils/units'
 export default function StatusBar() {
   const {
     dimensions, shelfCount, woodSpecies, units,
-    computeWeight, _past, _future, undo, redo,
-    furnitureType, explodeAmount, renderMode,
+    computeWeight, computeCutList, _past, _future, undo, redo,
+    furnitureType, explodeAmount, renderMode, assemblyStep,
   } = useStore()
   const { width: W, height: H, depth: D } = dimensions
 
-  const totalParts = 2 + 2 + shelfCount + 1
+  const cutList    = computeCutList()
+  const totalParts = cutList.reduce((s, p) => s + p.qty, 0)
   const approxTris = totalParts * 12
   const weight = computeWeight()
   const canUndo = _past.length > 0
@@ -48,7 +49,14 @@ export default function StatusBar() {
       {explodeAmount > 0 && (
         <>
           <Sep />
-          <span className="text-emerald-400">Explode {Math.round(explodeAmount * 100)}%</span>
+          <span className="text-amber-400">Explode {Math.round(explodeAmount * 100)}%</span>
+        </>
+      )}
+
+      {assemblyStep >= 0 && (
+        <>
+          <Sep />
+          <span className="text-cyan-400">Assembly step {assemblyStep + 1}</span>
         </>
       )}
 
@@ -56,7 +64,7 @@ export default function StatusBar() {
 
       {/* Keyboard hints */}
       <span className="text-gray-800 hidden lg:block">
-        G grid · T texture · X explode · W wire · ⌘Z undo · ⌘S save · ⌘P screenshot
+        G grid · T texture · X explode · A assembly · W wire · ⌘Z undo · ⌘S save · ⌘P screenshot
       </span>
     </footer>
   )

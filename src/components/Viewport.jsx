@@ -1,3 +1,4 @@
+import { Component } from 'react'
 import { Canvas } from '@react-three/fiber'
 import {
   OrbitControls, Grid, Environment, ContactShadows,
@@ -10,18 +11,21 @@ import CabinetUnit from './scene/CabinetUnit'
 import DiningTable from './scene/DiningTable'
 import BedFrame from './scene/BedFrame'
 import FloatingShelf from './scene/FloatingShelf'
+import TVStand from './scene/TVStand'
 import DimensionLabels from './scene/DimensionLabels'
 import CameraController from './scene/CameraController'
 import ScreenshotTrigger from './scene/ScreenshotTrigger'
 import ExportTrigger from './scene/ExportTrigger'
 import ViewportToolbar from './ViewportToolbar'
 import ExplodePanel from './ExplodePanel'
+import AssemblyPanel from './AssemblyPanel'
 
 function FurnitureModel() {
   const furnitureType = useStore((s) => s.furnitureType)
   if (furnitureType === 'desk')      return <DeskUnit />
   if (furnitureType === 'cabinet')   return <CabinetUnit />
   if (furnitureType === 'table')     return <DiningTable />
+  if (furnitureType === 'tvstand')   return <TVStand />
   if (furnitureType === 'bed')       return <BedFrame />
   if (furnitureType === 'wallshelf') return <FloatingShelf />
   return <ShelfUnit />
@@ -36,7 +40,6 @@ function Scene() {
       <ScreenshotTrigger />
       <ExportTrigger />
 
-      {/* Lighting rig */}
       <ambientLight intensity={0.45} color="#fff8f0" />
       <directionalLight
         position={[8, 12, 6]}
@@ -61,13 +64,7 @@ function Scene() {
       {showDimensions && <DimensionLabels />}
 
       {showShadows && (
-        <ContactShadows
-          position={[0, -0.5, 0]}
-          opacity={0.45}
-          scale={200}
-          blur={3}
-          far={60}
-        />
+        <ContactShadows position={[0, -0.5, 0]} opacity={0.45} scale={200} blur={3} far={60} />
       )}
 
       {showGrid && (
@@ -92,14 +89,38 @@ function Scene() {
   )
 }
 
+class CanvasErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { err: null } }
+  static getDerivedStateFromError(err) { return { err } }
+  render() {
+    if (this.state.err) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center bg-studio-bg gap-3">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-10 h-10 text-gray-700">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          <p className="text-xs text-gray-600 text-center max-w-48">3D view failed to load.<br />Check network & WebGL support.</p>
+          <button onClick={() => this.setState({ err: null })} className="text-xs text-amber-500 hover:text-amber-400 border border-amber-500/30 px-3 py-1 rounded-lg transition-colors">
+            Retry
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 export default function Viewport() {
   const showShadows = useStore((s) => s.showShadows)
+  const assemblyStep = useStore((s) => s.assemblyStep)
 
   return (
     <div className="flex-1 relative bg-studio-bg overflow-hidden">
       <ViewportToolbar />
-      <ExplodePanel />
 
+      {assemblyStep < 0 ? <ExplodePanel /> : <AssemblyPanel />}
+
+      <CanvasErrorBoundary>
       <Canvas
         shadows={showShadows}
         camera={{ position: [120, 90, 120], fov: 45, near: 0.5, far: 3000 }}
@@ -107,7 +128,7 @@ export default function Viewport() {
           antialias: true,
           powerPreference: 'high-performance',
           alpha: false, stencil: false, depth: true,
-          preserveDrawingBuffer: true,  // required for toBlob screenshot
+          preserveDrawingBuffer: true,
         }}
         dpr={[1, Math.min(window.devicePixelRatio, 2)]}
         performance={{ min: 0.5 }}
@@ -127,6 +148,7 @@ export default function Viewport() {
 
         {import.meta.env.DEV && <Stats />}
       </Canvas>
+      </CanvasErrorBoundary>
     </div>
   )
 }
