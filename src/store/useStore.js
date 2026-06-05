@@ -133,6 +133,9 @@ export const useStore = create(
     leftPanelWidth:  Number(localStorage.getItem('ms-left-w'))  || 240,
     rightPanelWidth: Number(localStorage.getItem('ms-right-w')) || 288,
 
+    // ── Welcome screen (shared globally so logo can re-open it) ──
+    welcomeDismissed: localStorage.getItem('makerstudio-welcomed') === '1',
+
     // ── Viewport ──────────────────────────────────────────
     activeTab:          'design',
     renderMode:         'solid',
@@ -201,6 +204,9 @@ export const useStore = create(
 
     setLeftPanelWidth: (w) => { localStorage.setItem('ms-left-w', String(w)); set({ leftPanelWidth: w }) },
     setRightPanelWidth:(w) => { localStorage.setItem('ms-right-w', String(w)); set({ rightPanelWidth: w }) },
+
+    dismissWelcome: () => { localStorage.setItem('makerstudio-welcomed', '1'); set({ welcomeDismissed: true }) },
+    showWelcomeScreen: () => set({ welcomeDismissed: false }),
 
     takeScreenshot:   () => set({ _screenshotPending: true }),
     _clearScreenshot: () => set({ _screenshotPending: false }),

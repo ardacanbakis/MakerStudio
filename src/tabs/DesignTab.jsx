@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useStore, SIZE_PRESETS, ROOM_SETS, FURNITURE_TYPES } from '../store/useStore'
-import { fmt, fromCm, toCm, UNITS } from '../utils/units'
+import { useStore } from '../store/useStore'
+import { fromCm, toCm, UNITS } from '../utils/units'
 
 const WOOD_SPECIES = [
   { id: 'oak',      label: 'Oak',      color: '#c8a96e' },
@@ -66,7 +66,6 @@ function Section({ title, badge, defaultOpen = true, children }) {
 }
 
 export default function DesignTab() {
-  const [showAllPresets, setShowAllPresets] = useState(false)
   const {
     dimensions, setDimension,
     woodSpecies, setWoodSpecies,
@@ -74,16 +73,11 @@ export default function DesignTab() {
     shelfCount, setShelfCount,
     plasticParts, setPlasticParts,
     units, setUnits,
-    furnitureType,
-    applyPreset, pushHistory,
+    pushHistory,
   } = useStore()
 
   const { width: W, height: H, depth: D } = dimensions
   const volM3 = (W * H * D / 1_000_000).toFixed(3)
-  const ftLabel = FURNITURE_TYPES.find((f) => f.id === furnitureType)?.label ?? furnitureType
-  const filteredPresets = showAllPresets
-    ? SIZE_PRESETS
-    : SIZE_PRESETS.filter((p) => p.type === furnitureType)
 
   return (
     <div className="flex flex-col gap-3">
@@ -203,63 +197,6 @@ export default function DesignTab() {
             Configure in Print Prep tab
           </p>
         )}
-      </Section>
-
-      {/* Quick Presets — filtered by current furniture type */}
-      <Section title="Presets" badge={ftLabel} defaultOpen={true}>
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-gray-600">
-            {filteredPresets.length} {showAllPresets ? 'total' : `for ${ftLabel}`}
-          </span>
-          <button
-            onClick={() => setShowAllPresets((v) => !v)}
-            className="text-xs text-gray-600 hover:text-amber-400 transition-colors"
-          >
-            {showAllPresets ? 'Show current type' : 'Show all'}
-          </button>
-        </div>
-        <div className="grid grid-cols-2 gap-1.5">
-          {filteredPresets.map((p) => (
-            <button
-              key={p.label}
-              onClick={() => applyPreset(p)}
-              className="text-left px-2.5 py-2 rounded-lg border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all group"
-            >
-              <p className="text-xs text-gray-300 group-hover:text-amber-300 transition-colors leading-none">{p.label}</p>
-              <p className="text-xs text-gray-600 font-mono mt-1">
-                {fmt(p.dims.width, units, false)}×{fmt(p.dims.height, units, false)}{UNITS[units].short}
-              </p>
-            </button>
-          ))}
-          {filteredPresets.length === 0 && (
-            <p className="col-span-2 text-xs text-gray-700 text-center py-3">No presets for this type</p>
-          )}
-        </div>
-      </Section>
-
-      {/* Room Sets */}
-      <Section title="Room Sets" defaultOpen={false}>
-        <div className="flex flex-col gap-4">
-          {Object.entries(ROOM_SETS).map(([setName, pieces]) => (
-            <div key={setName}>
-              <p className="text-xs text-gray-600 font-semibold tracking-wide uppercase mb-2">{setName}</p>
-              <div className="grid grid-cols-2 gap-1.5">
-                {pieces.map((p) => (
-                  <button
-                    key={p.label}
-                    onClick={() => applyPreset(p)}
-                    className="text-left px-2.5 py-2 rounded-lg border border-white/5 hover:border-violet-500/30 hover:bg-violet-500/5 transition-all group"
-                  >
-                    <p className="text-xs text-gray-300 group-hover:text-violet-300 transition-colors leading-none">{p.label}</p>
-                    <p className="text-xs text-gray-600 font-mono mt-1">
-                      {fmt(p.dims.width, units, false)}×{fmt(p.dims.height, units, false)}{UNITS[units].short}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
       </Section>
 
     </div>

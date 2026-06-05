@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react'
+import { useStore } from '../store/useStore'
 
-const STORAGE_KEY = 'makerstudio-welcomed'
-const THEME_KEY   = 'makerstudio-theme'
+const THEME_KEY = 'makerstudio-theme'
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
+// Backed by the global Zustand store so every caller (App, Sidebar logo, …)
+// shares the same state — clicking the logo truly re-opens the welcome page.
 export function useWelcomeScreen() {
-  const [dismissed, setDismissed] = useState(
-    () => localStorage.getItem(STORAGE_KEY) === '1'
-  )
+  const welcomeDismissed  = useStore((s) => s.welcomeDismissed)
+  const dismissWelcome    = useStore((s) => s.dismissWelcome)
+  const showWelcomeScreen = useStore((s) => s.showWelcomeScreen)
   return {
-    showWelcome: !dismissed,
-    dismiss: () => { localStorage.setItem(STORAGE_KEY, '1'); setDismissed(true) },
-    show:    () => setDismissed(false),
+    showWelcome: !welcomeDismissed,
+    dismiss:     dismissWelcome,
+    show:        showWelcomeScreen,
   }
 }
 
