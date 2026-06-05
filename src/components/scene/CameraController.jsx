@@ -7,10 +7,11 @@ import { useStore } from '../../store/useStore'
 function buildPresets(H) {
   const cx = 0, cy = H / 2, cz = 0
   return {
-    perspective: { pos: new Vector3(120, H * 0.9, 120), tgt: new Vector3(cx, cy, cz) },
-    front:       { pos: new Vector3(0,   H * 0.5, 220), tgt: new Vector3(cx, cy, cz) },
-    side:        { pos: new Vector3(220, H * 0.5, 0),   tgt: new Vector3(cx, cy, cz) },
-    top:         { pos: new Vector3(0,   H * 2.5, 0.1), tgt: new Vector3(cx, 0,  cz) },
+    perspective: { pos: new Vector3(120, H * 0.9,  120),  tgt: new Vector3(cx, cy,   cz) },
+    front:       { pos: new Vector3(0,   H * 0.5,  220),  tgt: new Vector3(cx, cy,   cz) },
+    side:        { pos: new Vector3(220, H * 0.5,  0),    tgt: new Vector3(cx, cy,   cz) },
+    top:         { pos: new Vector3(0,   H * 2.5,  0.1),  tgt: new Vector3(cx, 0,    cz) },
+    bottom:      { pos: new Vector3(0,   -H * 0.8, 0.1),  tgt: new Vector3(cx, cy,   cz) },
   }
 }
 

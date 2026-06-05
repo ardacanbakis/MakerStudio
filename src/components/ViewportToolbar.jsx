@@ -17,10 +17,11 @@ const RENDER_MODES = [
 ]
 
 const CAMERA_PRESETS = [
-  { id: 'perspective', label: '3/4' },
-  { id: 'front',       label: 'Front' },
-  { id: 'side',        label: 'Side' },
-  { id: 'top',         label: 'Top' },
+  { id: 'perspective', label: '3/4'    },
+  { id: 'front',       label: 'Front'  },
+  { id: 'side',        label: 'Side'   },
+  { id: 'top',         label: 'Top'    },
+  { id: 'bottom',      label: 'Bottom' },
 ]
 
 export default function ViewportToolbar() {

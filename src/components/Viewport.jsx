@@ -81,7 +81,7 @@ function Scene() {
       <OrbitControls
         makeDefault
         minDistance={40} maxDistance={600}
-        minPolarAngle={0.05} maxPolarAngle={Math.PI / 2 - 0.02}
+        minPolarAngle={0.02} maxPolarAngle={Math.PI - 0.04}
         enableDamping dampingFactor={0.07}
         rotateSpeed={0.55} panSpeed={0.8} zoomSpeed={0.75}
       />
