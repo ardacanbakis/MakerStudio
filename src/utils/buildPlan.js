@@ -33,7 +33,9 @@ export function buildPlanHTML(state) {
   const weight    = s.computeWeight()
   const ftLabel   = FURNITURE_TYPES.find((f) => f.id === furnitureType)?.label ?? furnitureType
   const finish    = FINISH_LABELS[surfaceFinish] ?? surfaceFinish
-  const steps     = ASSEMBLY_ORDERS[furnitureType] ?? []
+  const steps     = furnitureType === 'custom'
+    ? (s.customParts ?? []).map((p) => p.name)
+    : (ASSEMBLY_ORDERS[furnitureType] ?? [])
   const u         = UNITS[units].short
 
   // Cost (mirrors MaterialsTab)

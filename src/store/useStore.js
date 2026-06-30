@@ -5,15 +5,31 @@ import { buildProjectJSON, parseProjectJSON, downloadProject } from '../utils/pr
 const SNAPSHOT_KEYS = [
   'dimensions', 'woodSpecies', 'woodThickness', 'shelfCount', 'plasticParts',
   'filamentType', 'infillPercent', 'layerHeight', 'boardWidth', 'boardLength',
-  'cutKerf', 'units', 'furnitureType', 'surfaceFinish', 'paintColor',
+  'cutKerf', 'units', 'furnitureType', 'surfaceFinish', 'paintColor', 'customParts',
 ]
 
 function snapshot(s) {
   const out = {}
   SNAPSHOT_KEYS.forEach((k) => {
-    out[k] = typeof s[k] === 'object' && s[k] !== null ? { ...s[k] } : s[k]
+    const v = s[k]
+    if (Array.isArray(v))            out[k] = v.map((it) => (it && typeof it === 'object' ? { ...it } : it))
+    else if (v && typeof v === 'object') out[k] = { ...v }
+    else                             out[k] = v
   })
   return out
+}
+
+// Custom-build helpers
+let _partSeq = 0
+const newPartId = () => `p${Date.now().toString(36)}${(_partSeq++).toString(36)}`
+
+function starterParts() {
+  return [
+    { id: newPartId(), name: 'Left side',  x: -29, y: 40, z: 0, w: 2,  h: 80, d: 30 },
+    { id: newPartId(), name: 'Right side', x: 29,  y: 40, z: 0, w: 2,  h: 80, d: 30 },
+    { id: newPartId(), name: 'Top',        x: 0,   y: 79, z: 0, w: 60, h: 2,  d: 30 },
+    { id: newPartId(), name: 'Shelf',      x: 0,   y: 40, z: 0, w: 56, h: 2,  d: 28 },
+  ]
 }
 
 export const FURNITURE_TYPES = [
@@ -24,6 +40,7 @@ export const FURNITURE_TYPES = [
   { id: 'tvstand',  label: 'TV Stand',     icon: 'tv',      defaultDims: { width: 180, height: 55,  depth: 45  }, shelves: 2 },
   { id: 'bed',      label: 'Bed Frame',    icon: 'bed',     defaultDims: { width: 160, height: 45,  depth: 200 }, shelves: 0 },
   { id: 'wallshelf',label: 'Wall Shelf',   icon: 'wall',    defaultDims: { width: 80,  height: 30,  depth: 25  }, shelves: 0 },
+  { id: 'custom',   label: 'Custom Build', icon: 'custom',  defaultDims: { width: 100, height: 100, depth: 40  }, shelves: 0 },
 ]
 
 // Assembly step order per furniture type (labels match those used in scene components)
@@ -129,6 +146,12 @@ export const useStore = create(
     showTexture:    true,
     assemblyStep:   -1,     // -1 = off; 0..N = current build step
 
+    // ── Custom freeform builder ───────────────────────────
+    customParts:    [],     // [{ id, name, x, y, z, w, h, d }]
+    selectedPartId: null,
+    transformMode:  'translate',  // 'translate' | 'scale'
+    myDesigns:      JSON.parse(localStorage.getItem('makerstudio-mydesigns') || '[]'),
+
     // ── Panel layout ─────────────────────────────────────
     leftPanelWidth:  Number(localStorage.getItem('ms-left-w'))  || 240,
     rightPanelWidth: Number(localStorage.getItem('ms-right-w')) || 288,
@@ -192,12 +215,83 @@ export const useStore = create(
       const ft = FURNITURE_TYPES.find((f) => f.id === type)
       if (!ft) return
       get().pushHistory()
-      set({ furnitureType: type, dimensions: { ...ft.defaultDims }, shelfCount: ft.shelves, explodeAmount: 0, doorsOpen: false, assemblyStep: -1 })
+      const patch = { furnitureType: type, dimensions: { ...ft.defaultDims }, shelfCount: ft.shelves, explodeAmount: 0, doorsOpen: false, assemblyStep: -1 }
+      if (type === 'custom' && get().customParts.length === 0) {
+        patch.customParts = starterParts()
+        patch.selectedPartId = patch.customParts[0].id
+      }
+      set(patch)
     },
 
     applyPreset: (preset) => {
       get().pushHistory()
       set({ dimensions: { ...preset.dims }, shelfCount: preset.shelves, furnitureType: preset.type ?? 'shelf', explodeAmount: 0, assemblyStep: -1 })
+    },
+
+    // ── Custom freeform builder actions ───────────────────
+    addCustomPart: (preset) => {
+      const id = newPartId()
+      const n  = get().customParts.length + 1
+      const part = { id, name: `Board ${n}`, x: 0, y: 50, z: 0, w: 60, h: 2, d: 30, ...preset }
+      get().pushHistory()
+      set((s) => ({ customParts: [...s.customParts, part], selectedPartId: id }))
+    },
+    updateCustomPart: (id, patch) =>
+      set((s) => ({ customParts: s.customParts.map((p) => (p.id === id ? { ...p, ...patch } : p)) })),
+    removeCustomPart: (id) => {
+      get().pushHistory()
+      set((s) => ({
+        customParts: s.customParts.filter((p) => p.id !== id),
+        selectedPartId: s.selectedPartId === id ? null : s.selectedPartId,
+      }))
+    },
+    duplicateCustomPart: (id) => {
+      const src = get().customParts.find((p) => p.id === id)
+      if (!src) return
+      const nid = newPartId()
+      get().pushHistory()
+      set((s) => ({
+        customParts: [...s.customParts, { ...src, id: nid, name: `${src.name} copy`, x: src.x + 6, z: src.z + 6 }],
+        selectedPartId: nid,
+      }))
+    },
+    selectPart: (id) => set({ selectedPartId: id }),
+    setTransformMode: (m) => set({ transformMode: m }),
+    clearCustomParts: () => { get().pushHistory(); set({ customParts: [], selectedPartId: null }) },
+
+    // ── My Designs (saved custom configurations) ──────────
+    saveMyDesign: (name) => {
+      const s = get()
+      const design = {
+        id: `d${Date.now().toString(36)}`,
+        name: (name && name.trim()) || `Design ${s.myDesigns.length + 1}`,
+        date: new Date().toISOString().slice(0, 10),
+        type: s.furnitureType,
+        data: {
+          furnitureType: s.furnitureType,
+          dimensions: { ...s.dimensions },
+          shelfCount: s.shelfCount,
+          woodSpecies: s.woodSpecies,
+          woodThickness: s.woodThickness,
+          surfaceFinish: s.surfaceFinish,
+          paintColor: s.paintColor,
+          customParts: s.customParts.map((p) => ({ ...p })),
+        },
+      }
+      const next = [...s.myDesigns, design]
+      localStorage.setItem('makerstudio-mydesigns', JSON.stringify(next))
+      set({ myDesigns: next })
+    },
+    loadMyDesign: (id) => {
+      const d = get().myDesigns.find((x) => x.id === id)
+      if (!d) return
+      get().pushHistory()
+      set({ ...d.data, explodeAmount: 0, assemblyStep: -1, selectedPartId: null })
+    },
+    deleteMyDesign: (id) => {
+      const next = get().myDesigns.filter((x) => x.id !== id)
+      localStorage.setItem('makerstudio-mydesigns', JSON.stringify(next))
+      set({ myDesigns: next })
     },
 
     setHoveredPart: (label) => set({ hoveredPart: label }),
@@ -271,9 +365,16 @@ export const useStore = create(
     },
 
     computeCutList: () => {
-      const { dimensions, woodThickness, shelfCount, furnitureType } = get()
+      const { dimensions, woodThickness, shelfCount, furnitureType, customParts } = get()
       const { width: W, height: H, depth: D } = dimensions
       const t = woodThickness
+
+      if (furnitureType === 'custom') {
+        return customParts.map((p) => {
+          const [thick, w, h] = [p.w, p.h, p.d].sort((a, b) => a - b)
+          return { label: p.name, qty: 1, w, h, thick }
+        })
+      }
 
       if (furnitureType === 'desk') {
         const pedW = Math.min(50, W * 0.22)

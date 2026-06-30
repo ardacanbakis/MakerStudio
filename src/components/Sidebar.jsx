@@ -5,6 +5,13 @@ import { parseProjectJSON, openProjectFile } from '../utils/project'
 import { printBuildPlan } from '../utils/buildPlan'
 import { useWelcomeScreen } from './WelcomeScreen'
 
+const LIB_TABS = [
+  { id: 'types',     label: 'Types' },
+  { id: 'templates', label: 'Templates' },
+  { id: 'rooms',     label: 'Rooms' },
+  { id: 'mine',      label: 'Mine' },
+]
+
 export default function Sidebar({ style }) {
   const {
     furnitureType, setFurnitureType,
@@ -12,30 +19,32 @@ export default function Sidebar({ style }) {
     showShadows, toggleShadows,
     saveProject, loadProjectData,
     applyPreset, units,
+    myDesigns, saveMyDesign, loadMyDesign, deleteMyDesign,
   } = useStore()
   const { show } = useWelcomeScreen()
 
-  const [presetsOpen, setPresetsOpen] = useState(true)
-  const [roomsOpen, setRoomsOpen]     = useState(false)
-  const [showAllPresets, setShowAll]  = useState(false)
+  const [libTab, setLibTab] = useState('types')
+  const [showAllPresets, setShowAll] = useState(false)
+  const [designName, setDesignName] = useState('')
 
   const ftLabel = FURNITURE_TYPES.find((f) => f.id === furnitureType)?.label ?? furnitureType
   const filteredPresets = showAllPresets
     ? SIZE_PRESETS
     : SIZE_PRESETS.filter((p) => p.type === furnitureType)
 
-  // Apply + auto-collapse the section it came from
-  const pickPreset = (p) => { applyPreset(p); setPresetsOpen(false) }
-  const pickRoomPiece = (p) => { applyPreset(p); setRoomsOpen(false) }
-
   const handleLoad = async () => {
     try {
       const json = await openProjectFile()
-      const data = parseProjectJSON(json)
-      loadProjectData(data)
+      loadProjectData(parseProjectJSON(json))
     } catch (err) {
       console.warn('Load failed:', err.message)
     }
+  }
+
+  const handleSaveDesign = () => {
+    saveMyDesign(designName)
+    setDesignName('')
+    setLibTab('mine')
   }
 
   return (
@@ -54,15 +63,32 @@ export default function Sidebar({ style }) {
           <p className="text-xs text-gray-500 leading-none mt-0.5">Workshop Suite</p>
         </div>
         <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5 ml-auto text-gray-700 group-hover:text-amber-400 transition-colors">
-          <path fillRule="evenodd" d="M8 1a.5.5 0 01.5.5V6h4.5a.5.5 0 010 1H8.5v4.5a.5.5 0 01-1 0V7H3a.5.5 0 010-1h4.5V1.5A.5.5 0 018 1z" transform="rotate(45 8 8)"/>
+          <path d="M2 8a.5.5 0 01.5-.5h9.793L9.146 4.354a.5.5 0 11.708-.708l4 4a.5.5 0 010 .708l-4 4a.5.5 0 01-.708-.708L12.293 8.5H2.5A.5.5 0 012 8z" transform="rotate(180 8 8)"/>
         </svg>
       </button>
 
-      {/* Scrollable: furniture type + presets + room sets */}
-      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
-        {/* Furniture type */}
-        <div>
-          <p className="label-xs mb-2">Furniture Type</p>
+      {/* Library — tabbed */}
+      <div className="flex items-stretch border-b border-studio-border flex-shrink-0">
+        {LIB_TABS.map((t) => {
+          const active = libTab === t.id
+          return (
+            <button
+              key={t.id}
+              onClick={() => setLibTab(t.id)}
+              className={`relative flex-1 py-2 text-xs font-medium transition-colors ${
+                active ? 'text-amber-400' : 'text-gray-600 hover:text-gray-300'
+              }`}
+            >
+              {t.label}
+              {active && <span className="absolute bottom-0 left-2 right-2 h-0.5 rounded-full bg-amber-400" />}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Library content */}
+      <div className="flex-1 overflow-y-auto p-3">
+        {libTab === 'types' && (
           <div className="grid grid-cols-2 gap-1">
             {FURNITURE_TYPES.map((ft) => {
               const active = furnitureType === ft.id
@@ -83,56 +109,111 @@ export default function Sidebar({ style }) {
               )
             })}
           </div>
-        </div>
+        )}
 
-        {/* Presets (collapsible, auto-collapse on select) */}
-        <SidebarSection
-          title="Presets"
-          badge={ftLabel}
-          badgeClass="bg-amber-500/15 text-amber-400"
-          open={presetsOpen}
-          onToggle={() => setPresetsOpen((v) => !v)}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-gray-600">
-              {filteredPresets.length} {showAllPresets ? 'total' : `for ${ftLabel}`}
-            </span>
-            <button
-              onClick={() => setShowAll((v) => !v)}
-              className="text-xs text-gray-600 hover:text-amber-400 transition-colors"
-            >
-              {showAllPresets ? 'Current type' : 'Show all'}
-            </button>
+        {libTab === 'templates' && (
+          <div>
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-xs text-gray-600">
+                {filteredPresets.length} {showAllPresets ? 'total' : `· ${ftLabel}`}
+              </span>
+              <div className="flex items-center bg-black/40 border border-white/8 rounded-lg p-0.5 gap-0.5">
+                <button
+                  onClick={() => setShowAll(false)}
+                  className={`px-2 py-0.5 text-xs rounded transition-all ${!showAllPresets ? 'bg-amber-500 text-black font-semibold' : 'text-gray-500 hover:text-white'}`}
+                >
+                  This type
+                </button>
+                <button
+                  onClick={() => setShowAll(true)}
+                  className={`px-2 py-0.5 text-xs rounded transition-all ${showAllPresets ? 'bg-amber-500 text-black font-semibold' : 'text-gray-500 hover:text-white'}`}
+                >
+                  All
+                </button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              {filteredPresets.map((p) => (
+                <PresetButton key={p.label} preset={p} units={units} onClick={() => applyPreset(p)} accent="amber" showType={showAllPresets} />
+              ))}
+              {filteredPresets.length === 0 && (
+                <p className="col-span-2 text-xs text-gray-700 text-center py-4">No templates for this type</p>
+              )}
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            {filteredPresets.map((p) => (
-              <PresetButton key={p.label} preset={p} units={units} onClick={() => pickPreset(p)} accent="amber" />
-            ))}
-            {filteredPresets.length === 0 && (
-              <p className="col-span-2 text-xs text-gray-700 text-center py-3">No presets for this type</p>
-            )}
-          </div>
-        </SidebarSection>
+        )}
 
-        {/* Room Sets (collapsible, auto-collapse on select) */}
-        <SidebarSection
-          title="Room Sets"
-          open={roomsOpen}
-          onToggle={() => setRoomsOpen((v) => !v)}
-        >
+        {libTab === 'rooms' && (
           <div className="flex flex-col gap-3.5">
+            <p className="text-xs text-gray-600 leading-relaxed">
+              Quick starting points grouped by room — each applies one piece you can then customize.
+            </p>
             {Object.entries(ROOM_SETS).map(([setName, pieces]) => (
               <div key={setName}>
-                <p className="text-xs text-gray-600 font-semibold tracking-wide uppercase mb-2">{setName}</p>
+                <p className="text-xs text-gray-500 font-semibold tracking-wide uppercase mb-2">{setName}</p>
                 <div className="grid grid-cols-2 gap-1.5">
                   {pieces.map((p) => (
-                    <PresetButton key={p.label} preset={p} units={units} onClick={() => pickRoomPiece(p)} accent="violet" />
+                    <PresetButton key={p.label} preset={p} units={units} onClick={() => applyPreset(p)} accent="violet" showType />
                   ))}
                 </div>
               </div>
             ))}
           </div>
-        </SidebarSection>
+        )}
+
+        {libTab === 'mine' && (
+          <div className="flex flex-col gap-3">
+            {/* Save current */}
+            <div className="rounded-xl border border-white/8 bg-white/[0.02] p-2.5">
+              <p className="label-xs mb-2">Save current design</p>
+              <div className="flex gap-1.5">
+                <input
+                  value={designName}
+                  onChange={(e) => setDesignName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSaveDesign() }}
+                  placeholder="Design name…"
+                  className="flex-1 min-w-0 bg-black/40 border border-white/10 rounded-md px-2 py-1.5 text-xs text-gray-200 placeholder-gray-700 focus:border-amber-500/50 focus:outline-none"
+                />
+                <button
+                  onClick={handleSaveDesign}
+                  className="px-3 py-1.5 text-xs rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 transition-all font-medium"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+
+            {/* Saved list */}
+            {myDesigns.length === 0 ? (
+              <p className="text-xs text-gray-700 text-center py-6 border border-dashed border-white/10 rounded-lg">
+                No saved designs yet.<br />Build something and save it here.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-1">
+                {myDesigns.map((d) => (
+                  <div
+                    key={d.id}
+                    className="group flex items-center gap-2 px-2.5 py-2 rounded-lg border border-white/5 hover:border-amber-500/30 hover:bg-white/[0.03] transition-all"
+                  >
+                    <button onClick={() => loadMyDesign(d.id)} className="flex-1 min-w-0 text-left">
+                      <p className="text-xs text-gray-200 truncate">{d.name}</p>
+                      <p className="text-xs text-gray-600 font-mono mt-0.5 capitalize">{d.type} · {d.date}</p>
+                    </button>
+                    <button
+                      onClick={() => deleteMyDesign(d.id)}
+                      title="Delete"
+                      className="opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center rounded text-gray-500 hover:text-red-400 transition-all"
+                    >
+                      <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
+                        <path d="M6.5 1a1 1 0 00-1 1H3a.5.5 0 000 1h10a.5.5 0 000-1h-2.5a1 1 0 00-1-1h-3zM4 4v9a2 2 0 002 2h4a2 2 0 002-2V4H4z"/>
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Viewport toggles */}
@@ -142,7 +223,7 @@ export default function Sidebar({ style }) {
         <ViewportToggle label="Shadows" active={showShadows} onClick={toggleShadows} />
       </div>
 
-      {/* Save / Load */}
+      {/* Project */}
       <div className="p-3 border-t border-studio-border flex-shrink-0">
         <p className="label-xs mb-2">Project</p>
         <div className="flex gap-1.5">
@@ -182,35 +263,10 @@ export default function Sidebar({ style }) {
   )
 }
 
-function SidebarSection({ title, badge, badgeClass, open, onToggle, children }) {
-  return (
-    <section className="border border-white/6 rounded-xl overflow-hidden">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-white/3 transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold tracking-widest uppercase text-gray-500">{title}</span>
-          {badge && (
-            <span className={`text-xs px-1.5 py-0.5 rounded-md font-mono ${badgeClass || 'bg-white/10 text-gray-400'}`}>{badge}</span>
-          )}
-        </div>
-        <svg
-          viewBox="0 0 16 16" fill="currentColor"
-          className={`w-3 h-3 text-gray-600 transition-transform ${open ? '' : '-rotate-90'}`}
-        >
-          <path d="M8 10.5L2 4.5h12z" />
-        </svg>
-      </button>
-      {open && <div className="px-3 pb-3 pt-1">{children}</div>}
-    </section>
-  )
-}
-
-function PresetButton({ preset, units, onClick, accent }) {
+function PresetButton({ preset, units, onClick, accent, showType }) {
   const hover = accent === 'violet'
-    ? 'hover:border-violet-500/30 hover:bg-violet-500/5 group-hover:text-violet-300'
-    : 'hover:border-amber-500/30 hover:bg-amber-500/5 group-hover:text-amber-300'
+    ? 'hover:border-violet-500/30 hover:bg-violet-500/5'
+    : 'hover:border-amber-500/30 hover:bg-amber-500/5'
   const textHover = accent === 'violet' ? 'group-hover:text-violet-300' : 'group-hover:text-amber-300'
   return (
     <button
@@ -220,6 +276,7 @@ function PresetButton({ preset, units, onClick, accent }) {
       <p className={`text-xs text-gray-300 transition-colors leading-none ${textHover}`}>{preset.label}</p>
       <p className="text-xs text-gray-600 font-mono mt-1">
         {fmt(preset.dims.width, units, false)}×{fmt(preset.dims.height, units, false)}{UNITS[units].short}
+        {showType && <span className="text-gray-700 capitalize"> · {preset.type}</span>}
       </p>
     </button>
   )
@@ -230,16 +287,16 @@ const FURNITURE_ICONS = {
   desk:     <path d="M1 3a1 1 0 011-1h12a1 1 0 011 1v1H1V3zm0 3h14v1H1V6zm0 2v5h4V8H1zm5 0v5h4V8H6zm5 0v5h3V8h-3z"/>,
   cabinet:  <path d="M2 1a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V2a1 1 0 00-1-1H2zm0 1h5v12H2V2zm6 0h5v12H8V2zM5 7a.5.5 0 110-1 .5.5 0 010 1zm6 0a.5.5 0 110-1 .5.5 0 010 1z"/>,
   table:    <path d="M1 4h14v2H1V4zm1 2h1v7H2V6zm10 0h1v7h-1V6zm-8 6h10v1H4v-1z"/>,
-  tvstand:  <path d="M1 5h14v1H1V5zm0 2h3v5H1V7zm4 0h6v5H5V7zm7 0h3v5h-3V7zm-10 5h14v1H2v-1zM5 3l3-2 3 2H5z"/>,
+  tv:       <path d="M1 5h14v1H1V5zm0 2h3v5H1V7zm4 0h6v5H5V7zm7 0h3v5h-3V7zm-10 5h14v1H2v-1zM5 3l3-2 3 2H5z"/>,
   bed:      <path d="M1 10V5a1 1 0 011-1h12a1 1 0 011 1v5H1zm0 1h14v2H1v-2zM2 5v5h3V5H2zm4 0v5h4V5H6zm5 0v5h3V5h-3z"/>,
   wall:     <path d="M1 6h14v3H1V6zm2-4h1v4H3V2zm8 0h1v4h-1V2zm-3 0h1v4H8V2zM3 9h1v5H3V9zm8 0h1v5h-1V9z"/>,
+  custom:   <path d="M8 1l1.8 3.6L14 5l-3 2.9.7 4.1L8 10.5 4.3 12 5 7.9 2 5l4.2-.4L8 1zm0 6a1 1 0 100-2 1 1 0 000 2z"/>,
 }
 
 function FurnitureIcon({ id, active }) {
-  const paths = FURNITURE_ICONS[id]
   return (
     <svg viewBox="0 0 16 16" fill="currentColor" className={`w-3.5 h-3.5 flex-shrink-0 ${active ? 'text-amber-400' : 'text-gray-600'}`}>
-      {paths}
+      {FURNITURE_ICONS[id]}
     </svg>
   )
 }

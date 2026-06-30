@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../store/useStore'
 import { fromCm, toCm, UNITS } from '../utils/units'
+import BuilderPanel from '../components/BuilderPanel'
 
 const WOOD_SPECIES = [
   { id: 'oak',      label: 'Oak',      color: '#c8a96e' },
@@ -73,11 +74,13 @@ export default function DesignTab() {
     shelfCount, setShelfCount,
     plasticParts, setPlasticParts,
     units, setUnits,
+    furnitureType,
     pushHistory,
   } = useStore()
 
   const { width: W, height: H, depth: D } = dimensions
   const volM3 = (W * H * D / 1_000_000).toFixed(3)
+  const isCustom = furnitureType === 'custom'
 
   return (
     <div className="flex flex-col gap-3">
@@ -100,7 +103,11 @@ export default function DesignTab() {
         </div>
       </div>
 
-      {/* Dimensions */}
+      {/* Custom freeform builder replaces dimensions + structure */}
+      {isCustom && <BuilderPanel />}
+
+      {/* Dimensions (parametric types only) */}
+      {!isCustom && (
       <Section title="Dimensions" badge={`${W}×${H}×${D} cm`}>
         <DimSlider
           label="Width" valueCm={W} minCm={30} maxCm={250} units={units}
@@ -122,8 +129,10 @@ export default function DesignTab() {
           <span className="font-mono text-xs text-gray-400">{volM3} m³</span>
         </div>
       </Section>
+      )}
 
-      {/* Structure */}
+      {/* Structure (parametric types only) */}
+      {!isCustom && (
       <Section title="Structure">
         <DimSlider
           label="Board thickness"
@@ -153,6 +162,7 @@ export default function DesignTab() {
           </div>
         </div>
       </Section>
+      )}
 
       {/* Wood species */}
       <Section title="Wood Species">

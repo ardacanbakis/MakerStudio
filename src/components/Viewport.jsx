@@ -1,4 +1,4 @@
-import { Component } from 'react'
+import { Component, Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import {
   OrbitControls, Grid, Environment, ContactShadows,
@@ -12,6 +12,7 @@ import DiningTable from './scene/DiningTable'
 import BedFrame from './scene/BedFrame'
 import FloatingShelf from './scene/FloatingShelf'
 import TVStand from './scene/TVStand'
+import CustomBuild from './scene/CustomBuild'
 import DimensionLabels from './scene/DimensionLabels'
 import CameraController from './scene/CameraController'
 import ScreenshotTrigger from './scene/ScreenshotTrigger'
@@ -19,6 +20,15 @@ import ExportTrigger from './scene/ExportTrigger'
 import ViewportToolbar from './ViewportToolbar'
 import ExplodePanel from './ExplodePanel'
 import AssemblyPanel from './AssemblyPanel'
+import BuilderHint from './BuilderHint'
+
+// Keeps an HDR/CDN load failure from crashing the whole 3D scene —
+// the explicit light rig already lights the model, so we just drop the IBL.
+class EnvBoundary extends Component {
+  constructor(props) { super(props); this.state = { failed: false } }
+  static getDerivedStateFromError() { return { failed: true } }
+  render() { return this.state.failed ? null : this.props.children }
+}
 
 function FurnitureModel() {
   const furnitureType = useStore((s) => s.furnitureType)
@@ -28,6 +38,7 @@ function FurnitureModel() {
   if (furnitureType === 'tvstand')   return <TVStand />
   if (furnitureType === 'bed')       return <BedFrame />
   if (furnitureType === 'wallshelf') return <FloatingShelf />
+  if (furnitureType === 'custom')    return <CustomBuild />
   return <ShelfUnit />
 }
 
@@ -57,7 +68,11 @@ function Scene() {
       <directionalLight position={[-4, 6, -4]} intensity={0.5} color="#ddeeff" />
       <pointLight position={[0, 8, 4]} intensity={0.8} color="#fff8f0" distance={600} />
 
-      <Environment preset="studio" background={false} />
+      <EnvBoundary>
+        <Suspense fallback={null}>
+          <Environment preset="studio" background={false} />
+        </Suspense>
+      </EnvBoundary>
 
       <FurnitureModel />
 
@@ -113,12 +128,15 @@ class CanvasErrorBoundary extends Component {
 export default function Viewport() {
   const showShadows = useStore((s) => s.showShadows)
   const assemblyStep = useStore((s) => s.assemblyStep)
+  const furnitureType = useStore((s) => s.furnitureType)
+  const selectPart = useStore((s) => s.selectPart)
+  const isCustom = furnitureType === 'custom'
 
   return (
     <div className="flex-1 relative bg-studio-bg overflow-hidden">
       <ViewportToolbar />
 
-      {assemblyStep < 0 ? <ExplodePanel /> : <AssemblyPanel />}
+      {isCustom ? <BuilderHint /> : assemblyStep < 0 ? <ExplodePanel /> : <AssemblyPanel />}
 
       <CanvasErrorBoundary>
       <Canvas
@@ -133,6 +151,7 @@ export default function Viewport() {
         dpr={[1, Math.min(window.devicePixelRatio, 2)]}
         performance={{ min: 0.5 }}
         className="w-full h-full"
+        onPointerMissed={() => { if (isCustom) selectPart(null) }}
       >
         <color attach="background" args={['#0f0f0f']} />
         <fog attach="fog" args={['#0f0f0f', 400, 1200]} />
