@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useStore } from '../store/useStore'
+import { useStore, ASSEMBLY_ORDERS } from '../store/useStore'
 
 export default function useKeyboardShortcuts() {
   const store = useStore()
@@ -44,6 +44,19 @@ export default function useKeyboardShortcuts() {
         const current = store.explodeAmount
         store.setExplodeAmount(current > 0 ? 0 : 1)
         return
+      }
+
+      // Assembly mode toggle
+      if (e.key === 'a' && !meta) {
+        store.assemblyStep >= 0 ? store.exitAssembly() : store.setAssemblyStep(0)
+        return
+      }
+
+      // Assembly step navigation (when in assembly mode)
+      if (store.assemblyStep >= 0) {
+        const steps = (ASSEMBLY_ORDERS[store.furnitureType] ?? []).length
+        if (e.key === 'ArrowRight') { if (store.assemblyStep < steps - 1) store.setAssemblyStep(store.assemblyStep + 1); return }
+        if (e.key === 'ArrowLeft')  { if (store.assemblyStep > 0) store.setAssemblyStep(store.assemblyStep - 1); return }
       }
 
       // Cabinet doors

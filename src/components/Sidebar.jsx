@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStore, FURNITURE_TYPES, SIZE_PRESETS, ROOM_SETS } from '../store/useStore'
 import { fmt, UNITS } from '../utils/units'
 import { parseProjectJSON, openProjectFile } from '../utils/project'
+import { printBuildPlan } from '../utils/buildPlan'
 import { useWelcomeScreen } from './WelcomeScreen'
 
 export default function Sidebar({ style }) {
@@ -158,6 +159,16 @@ export default function Sidebar({ style }) {
             Load
           </button>
         </div>
+        <button
+          onClick={() => printBuildPlan()}
+          title="Open a printable build plan (cut list, assembly, cost)"
+          className="mt-1.5 w-full flex items-center justify-center gap-1.5 py-1.5 text-xs rounded-md bg-white/5 border border-white/10 text-gray-300 hover:text-white hover:border-amber-500/40 hover:bg-white/10 transition-colors font-medium"
+        >
+          <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+            <path d="M5 1a2 2 0 00-2 2v1h10V3a2 2 0 00-2-2H5zM3 6a1 1 0 00-1 1v3a1 1 0 001 1h1v2a1 1 0 001 1h6a1 1 0 001-1v-2h1a1 1 0 001-1V7a1 1 0 00-1-1H3zm2 5h6v3H5v-3zm7-2.5a.5.5 0 110-1 .5.5 0 010 1z"/>
+          </svg>
+          Build Plan
+        </button>
       </div>
 
       {/* Status */}
